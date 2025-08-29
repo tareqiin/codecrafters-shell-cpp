@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include <unistd.h> 
 #include <sys/wait.h>    
-
+#include <limits.h> 
 
 void Shell::run() {
   std::string input; 
@@ -60,6 +60,13 @@ void Shell::handleCommand(const std::string& input) {
       }
       if(!found) std::cout << s << ": not found\n"; 
       return; 
+    } else if(cmd == "pwd") {
+      char cwd[PATH_MAX]; 
+      if (getcwd(cwd, sizeof(cwd)) != nullptr) {
+        std::cout << cwd << "\n"; 
+      } else {
+        perror(cwd); 
+      }
     } else {
       std::vector<std::string> tokens; 
       tokens.push_back(cmd); 
