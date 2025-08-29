@@ -47,10 +47,11 @@ void Shell::handleCommand(const std::string& input) {
           std::string fullPath = dir + "/" + s; 
           if(access(fullPath.c_str(), X_OK) == 0) {
             std::cout << s << " is " << fullPath << "\n"; 
+            return; 
           }
         }
       }
-      
+
       else std::cout << s <<  ": not found\n"; 
       return; 
     }
