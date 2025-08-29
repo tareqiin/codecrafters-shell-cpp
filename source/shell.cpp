@@ -74,7 +74,7 @@ void Shell::handleCommand(const std::string& input) {
       if(pid == 0) {
         // child
         execvp(argv[0], argv.data()); 
-        perror(argv[0]); 
+        std::cout << argv[0] << ": command not found\n";  
         exit(1); 
       } else if (pid > 0) {
         // parent 
