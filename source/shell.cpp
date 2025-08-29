@@ -30,6 +30,12 @@ void Shell::handleCommand(const std::string& input) {
     if(!s.empty() && s[0] == ' ') s.erase(0,1); 
     std::cout << s << "\n"; 
     return; 
+  } else if (cmd == "type") {
+    vector<std::string> a = {"echo", "exit", "type"}; 
+    std::string  s; iss>>s; 
+    if(a.find(s))std::cout << s << " is a shell builtin\n"; 
+    else std::cout << "invalid_command: not found\n"; 
+    return; 
   }
 
   std::cout << input << ": command not found\n"; 
