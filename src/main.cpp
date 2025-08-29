@@ -7,16 +7,10 @@ int main() {
 
   std::string input;
   
-std::string command;
-while (true) {
-    std::cout << "$ ";  // print prompt
-    if (!std::getline(std::cin, command)) break;
-
-    if (command == "exit") break;
-    // ... check builtins, etc. ...
-
-    // If not found:
-    printCommandNotFound(command);
-}
-
+  while(true) {
+    if(!std::getline(std::cin, input))break; 
+    std::cout << "$ ";
+    std::getline(std::cin, input); 
+    std::cout << input << ": command not found" << std::endl; 
+  }
 }
