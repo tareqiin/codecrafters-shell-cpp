@@ -1,6 +1,7 @@
 #include "../headers/shell.hpp"
 #include <iostream>
 #include <sstream>
+#include <vector>
 #include <algorithm> // for std::find
 
 void Shell::run() {
