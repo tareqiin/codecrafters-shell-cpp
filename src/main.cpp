@@ -5,24 +5,23 @@ int main() {
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  std::string input;
-    while(true) {
-      using namespace std; 
-      cout << "$ "; 
-      if(!getline(cin, input)) return 0; 
+    std::string input;
+    while (true) {
+        std::cout << "$ ";
+        if (!std::getline(std::cin, input)) return 0;
 
-      istringstream iss(input); 
-      string cmd; 
-      iss >> cmd; 
+        std::istringstream iss(input);
+        std::string cmd;
+        iss >> cmd;
 
-      if (cmd == "exit") {
-        int code = 0; 
-        if (iss >> code) {
-          return code; 
+        if (cmd == "exit") {
+            int code = 0; // default exit code
+            if (iss >> code) {
+                return code;  // exit with provided code
+            }
+            return 0; // no code → exit 0
         }
-        return 0; 
-      }
 
-      cout << input << ": command not found\n"; 
-  }
+        std::cout << input << ": command not found\n";
+    }
 }
