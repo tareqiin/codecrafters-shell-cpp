@@ -5,9 +5,10 @@
 #include <algorithm> // for std::find
 #include <cstdlib>
 #include <unistd.h> 
+#include <sys/wait.h>    
 
 
-Shell::run() {
+void Shell::run() {
   std::string input; 
   while(true) {
     std::cout << "$ "; 
