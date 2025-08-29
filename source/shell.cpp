@@ -3,6 +3,8 @@
 #include <sstream>
 #include <vector>
 #include <algorithm> // for std::find
+#include <cstdlib>
+#include <unistd.h> 
 
 void Shell::run() {
   std::string input; 
@@ -36,10 +38,22 @@ void Shell::handleCommand(const std::string& input) {
      std::string s; iss>>s;
       if(std::find(builtins.begin(), builtins.end(), s) != builtins.end())
       std::cout << s << " is a shell builtin\n";
+
+      char* pathEnv = getenv("PATH"); 
+      if(pathEnv) {
+        std::istringstream paths(pathEnv); 
+        std::string dir; 
+        while(std::getline(paths, dir, ':')) {
+          std::string fullPath = dir + "/" + s; 
+          if(access(fullPath.c_str(), X_OK) == 0) {
+            std::cout << s << " is " << fullPath << "\n"; 
+          }
+        }
+      }
+      
       else std::cout << s <<  ": not found\n"; 
-
-
       return; 
     }
+
   std::cout << input << ": command not found\n"; 
 }
