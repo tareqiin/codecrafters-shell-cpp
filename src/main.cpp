@@ -5,12 +5,18 @@ int main() {
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  std::cout << "$ ";
-
   std::string input;
   
-  while(std::getline(std::cin, input)) {
-    std::cout << "$ ";
-    std::cout << input << ": command not found" << std::endl; 
-  }
+std::string command;
+while (true) {
+    std::cout << "$ ";  // print prompt
+    if (!std::getline(std::cin, command)) break;
+
+    if (command == "exit") break;
+    // ... check builtins, etc. ...
+
+    // If not found:
+    printCommandNotFound(command);
+}
+
 }
