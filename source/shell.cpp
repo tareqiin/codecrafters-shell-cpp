@@ -50,6 +50,7 @@ void Shell::handleCommand(const std::string& input) {
             return; 
           } else {
             std::cout << s << ": not found" << "\n"; 
+            return; 
           }
         }
       }
