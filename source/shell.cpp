@@ -5,14 +5,6 @@
 #include <algorithm> // for std::find
 #include <cstdlib>
 #include <unistd.h> 
-#include <sys/wait.h>    
-
-
-
-
-
-
-
 
 
 Shell::run() {
@@ -30,6 +22,7 @@ void Shell::handleCommand(const std::string& input) {
   std::istringstream iss(input); 
   std::string cmd; 
   iss >> cmd; 
+  if (cmd.empty()) return;
 
   if (cmd == "exit") {
     int code = 0; 
@@ -89,7 +82,7 @@ void Shell::handleCommand(const std::string& input) {
       } else {
         perror("fork"); 
       }
+      return; 
     }
 
-  std::cout << input << ": command not found\n"; 
 }
