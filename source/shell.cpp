@@ -36,8 +36,10 @@ void Shell::handleCommand(const std::string& input) {
     return; 
   } else if (cmd == "type") { 
      std::string s; iss>>s;
-      if(std::find(builtins.begin(), builtins.end(), s) != builtins.end())
-      std::cout << s << " is a shell builtin\n";
+      if(std::find(builtins.begin(), builtins.end(), s) != builtins.end()) {
+        std::cout << s << " is a shell builtin\n";
+        return; 
+      }
 
       char* pathEnv = getenv("PATH"); 
       bool found = false; 
