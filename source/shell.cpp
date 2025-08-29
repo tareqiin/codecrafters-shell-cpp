@@ -5,8 +5,17 @@
 #include <algorithm> // for std::find
 #include <cstdlib>
 #include <unistd.h> 
+#include <sys/wait.h>    
 
-void Shell::run() {
+
+
+
+
+
+
+
+
+Shell::run() {
   std::string input; 
   while(true) {
     std::cout << "$ "; 
@@ -57,6 +66,29 @@ void Shell::handleCommand(const std::string& input) {
       }
       if(!found) std::cout << s << ": not found\n"; 
       return; 
+    } else {
+      std::vector<std::string> tokens; 
+      tokens.push_back(cmd); 
+      std::string arg; 
+      while(iss >> arg) tokens.push_back(arg); 
+
+      std::vector<char*> argv; 
+      for(auto &t : tokens) argv.push_back(const_cast<char*>(t.c_str())); 
+      argv.push_back(nullptr); 
+
+      pid_t pid = fork(); 
+      if(pid == 0) {
+        // child
+        execvp(argv[0], argv.data()); 
+        perror("execvp"); 
+        exit(1); 
+      } else if (pid > 0) {
+        // parent 
+        int status; 
+        waitpid(pid, &status, 0); 
+      } else {
+        perror("fork"); 
+      }
     }
 
   std::cout << input << ": command not found\n"; 
