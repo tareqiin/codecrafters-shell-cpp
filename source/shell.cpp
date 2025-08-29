@@ -28,7 +28,6 @@ void Shell::handleCommand(const std::string& input) {
     std::string s;
     if(iss >> s) {
       std::cout << s << "\n"; 
-      return 0; 
     }
   }
 
