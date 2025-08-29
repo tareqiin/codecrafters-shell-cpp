@@ -34,7 +34,7 @@ void Shell::handleCommand(const std::string& input) {
     return; 
   } else if (cmd == "type") { 
      std::string s; iss>>s;
-      if(a.find(builtins.begin(), builtins.end(), s) != builtins.end())
+      if(builtins.find(builtins.begin(), builtins.end(), s) != builtins.end())
       std::cout << s << " is a shell builtin\n";
       else std::cout << "invalid_command: not found\n"; 
 
