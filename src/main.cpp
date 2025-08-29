@@ -12,7 +12,6 @@ int main() {
     if(!std::getline(std::cin, input))break; 
     std::cout << input << ": command not found\n"; 
     if(input == "exit 0") {
-      std::cout << "$ \n"; 
       break;
     }
   }
