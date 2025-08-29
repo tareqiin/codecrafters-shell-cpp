@@ -29,6 +29,7 @@ void Shell::handleCommand(const std::string& input) {
     std::getline(iss, s); 
     if(!s.empty() && s[0] == ' ') s.erase(0,1); 
     std::cout << s << "\n"; 
+    return; 
   }
 
   std::cout << input << ": command not found\n"; 
