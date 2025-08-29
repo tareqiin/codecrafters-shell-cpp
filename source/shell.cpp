@@ -1,7 +1,7 @@
 #include "../headers/shell.hpp"
 #include <iostream>
 #include <sstream>
-
+#include <algorithm> // for std::find
 
 void Shell::run() {
   std::string input; 
@@ -35,7 +35,7 @@ void Shell::handleCommand(const std::string& input) {
     std::string  s; iss>>s; 
     if(a.find(s))std::cout << s << " is a shell builtin\n"; 
     else std::cout << "invalid_command: not found\n"; 
-    return; 
+    return;
   }
 
   std::cout << input << ": command not found\n"; 
