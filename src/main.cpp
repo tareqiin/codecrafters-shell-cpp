@@ -6,12 +6,23 @@ int main() {
   std::cerr << std::unitbuf;
 
   std::string input;
-  
-  while(true) {
-    std::cout << "$ ";
-    if(!std::getline(std::cin, input))return 0; 
-    if(input == "exit") return 0; 
-    std::cout << input << ": command not found\n"; 
-    
+    while(true) {
+      using namespace std; 
+      cout << "$ "; 
+      if(!getline(cin, input)) return 0; 
+
+      istringstream iss(input); 
+      string cmd; 
+      iss >> cmd; 
+
+      if (cmd == "exit") {
+        int code = 0; 
+        if (iss >> code) {
+          return code; 
+        }
+        return 0; 
+      }
+
+      cout << input << ": command not found\n"; 
   }
 }
