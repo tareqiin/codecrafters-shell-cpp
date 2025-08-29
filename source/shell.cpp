@@ -74,7 +74,7 @@ void Shell::handleCommand(const std::string& input) {
       if(pid == 0) {
         // child
         execvp(argv[0], argv.data()); 
-        perror("execvp"); 
+        perror(argv[0]); 
         exit(1); 
       } else if (pid > 0) {
         // parent 
