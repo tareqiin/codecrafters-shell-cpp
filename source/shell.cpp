@@ -40,6 +40,7 @@ void Shell::handleCommand(const std::string& input) {
       std::cout << s << " is a shell builtin\n";
 
       char* pathEnv = getenv("PATH"); 
+      bool found = false; 
       if(pathEnv) {
         std::istringstream paths(pathEnv); 
         std::string dir; 
@@ -47,12 +48,12 @@ void Shell::handleCommand(const std::string& input) {
           std::string fullPath = dir + "/" + s; 
           if(access(fullPath.c_str(), X_OK) == 0) {
             std::cout << s << " is " << fullPath << "\n"; 
-            return; 
+            found = true; 
+            break; 
           }
         }
-      } 
-
-      else std::cout << s <<  ": not found\n"; 
+      }
+      if(!found) std::cout << s << ": not found\n"; 
       return; 
     }
 
