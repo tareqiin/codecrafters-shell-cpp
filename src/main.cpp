@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <sstream>
 
 int main() {
   std::cout << std::unitbuf;
