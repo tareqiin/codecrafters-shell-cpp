@@ -48,12 +48,9 @@ void Shell::handleCommand(const std::string& input) {
           if(access(fullPath.c_str(), X_OK) == 0) {
             std::cout << s << " is " << fullPath << "\n"; 
             return; 
-          } else {
-            std::cout << s << ": not found" << "\n"; 
-            return; 
           }
         }
-      }
+      } 
 
       else std::cout << s <<  ": not found\n"; 
       return; 
