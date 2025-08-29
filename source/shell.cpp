@@ -19,7 +19,7 @@ void Shell::run() {
 }
 
 void Shell::handleCommand(const std::string& input) {
-  std::vector<std::string> builtins = {"echo", "exit", "type"};
+ static const std::vector<std::string> builtins = {"echo", "exit", "type", "pwd"};
   std::istringstream iss(input); 
   std::string cmd; 
   iss >> cmd; 
@@ -65,8 +65,9 @@ void Shell::handleCommand(const std::string& input) {
       if (getcwd(cwd, sizeof(cwd)) != nullptr) {
         std::cout << cwd << "\n"; 
       } else {
-        perror(cwd); 
+        perror("getcwd"); 
       }
+      return; 
     } else {
       std::vector<std::string> tokens; 
       tokens.push_back(cmd); 
