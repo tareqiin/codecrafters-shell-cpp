@@ -15,6 +15,7 @@ void Shell::run() {
 }
 
 void Shell::handleCommand(const std::string& input) {
+  std::vector<std::string> builtins = {"echo", "exit", "type"};
   std::istringstream iss(input); 
   std::string cmd; 
   iss >> cmd; 
@@ -31,13 +32,14 @@ void Shell::handleCommand(const std::string& input) {
     if(!s.empty() && s[0] == ' ') s.erase(0,1); 
     std::cout << s << "\n"; 
     return; 
-  } else if (cmd == "type") {
-    vector<std::string> a = {"echo", "exit", "type"}; 
-    std::string  s; iss>>s; 
-    if(a.find(s))std::cout << s << " is a shell builtin\n"; 
-    else std::cout << "invalid_command: not found\n"; 
-    return;
-  }
+  } else if (cmd == "type") { 
+     std::string s; iss>>s;
+      if(a.find(builtins.begin(), builtins.end(), s) != builtins.end())
+      std::cout << s << " is a shell builtin\n";
+      else std::cout << "invalid_command: not found\n"; 
 
+
+      return; 
+    }
   std::cout << input << ": command not found\n"; 
 }
