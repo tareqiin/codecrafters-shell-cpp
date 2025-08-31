@@ -5,7 +5,8 @@
 class Shell {
 public:
     void run(); // main loop
-private:
-    std::vector<std::string> tokenize(const std::string& input); 
     void handleCommand(const std::string& input);
+private:
+    std::vector<std::string> tokenize(const std::string& input);
+
 };
