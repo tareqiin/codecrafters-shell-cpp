@@ -18,41 +18,40 @@ void Shell::run() {
   }
 }
 
-std::vector<std::string> tokenize(const std::string& input) {
-    std::vector<std::string> tokens;
-    std::string curr;
-    bool in_single_quote = false;
+  std::vector<std::string> Shell::tokenize(const std::string& input) {
+      std::vector<std::string> tokens;
+      std::string curr;
+      bool in_single_quote = false;
 
-    for (size_t i = 0; i < input.size(); ++i) {
-        char c = input[i];
+      for (size_t i = 0; i < input.size(); ++i) {
+          char c = input[i];
 
-        if (c == '\'') {
-            in_single_quote = !in_single_quote;
-            continue; 
-        }
+          if (c == '\'') {
+              in_single_quote = !in_single_quote;
+              continue;
+          }
 
-        if (!in_single_quote && std::isspace(static_cast<unsigned char>(c))) {
-            if (!curr.empty()) {
-                tokens.push_back(curr);
-                curr.clear();
-            }
-        } else {
-            curr += c;
-        }
-    }
+          if (!in_single_quote && std::isspace(static_cast<unsigned char>(c))) {
+              if (!curr.empty()) {
+                  tokens.push_back(curr);
+                  curr.clear();
+              }
+          } else {
+              curr += c;
+          }
+      }
 
-    if (!curr.empty()) {
-        tokens.push_back(curr);
-    }
+      if (!curr.empty()) tokens.push_back(curr);
 
-    return tokens;
-}
+      return tokens;
+  }
+
 
 
 void Shell::handleCommand(const std::string& input) {
     static const std::vector<std::string> builtins = {"echo", "exit", "type", "pwd", "cd"};
   
-    std::vector<std::string> tokens = tokenize(input);
+    std::vector<std::string> tokens = this->tokenize(input);
     if (tokens.empty()) return;
 
     std::string cmd = tokens[0];
