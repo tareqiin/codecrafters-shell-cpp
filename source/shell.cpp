@@ -80,6 +80,7 @@ void Shell::handleCommand(const std::string& input) {
         if (chdir(path.c_str()) != 0) std::cout << "cd: " << path << ": No such file or directory\n";
         else std::cout << "cd: " << path << ": No such file or directory\n";
       }
+      std::cout << "$ " << std::flush;
       return; 
     }
     else {
