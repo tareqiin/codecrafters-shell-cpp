@@ -77,12 +77,10 @@ void Shell::handleCommand(const std::string& input) {
       
 
       if(path[0] == '/') {
-        if (chdir(path.c_str()) != 0) {
-          std::cerr <"cd: " << path << ": No such file or directory\n"; 
-        } else {
-          std::cerr << "cd: " << path << ": No such file or directory\n";
-        }
+        if (chdir(path.c_str()) != 0) std::cerr << "cd: " << path << ": No such file or directory\n";
+        else std::cerr << "cd: " << path << ": No such file or directory\n";
       }
+      return; 
     }
     else {
       std::vector<std::string> tokens; 
