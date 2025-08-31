@@ -74,6 +74,14 @@ void Shell::handleCommand(const std::string& input) {
         iss >> path; 
         if (path.empty()) return;
 
+        if (path == "~") {
+          char* home = getenv("HOME"); 
+          if(home && chdir(home) != 0) {
+            std::cout << "cd: " << path << ": No such file or directory\n" << std::flush; 
+          }
+          return; 
+        }
+
         if (chdir(path.c_str()) != 0) {
             std::cout << "cd: " << path << ": No such file or directory\n" << std::flush; 
         }
