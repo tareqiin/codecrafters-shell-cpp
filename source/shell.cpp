@@ -11,7 +11,7 @@
 void Shell::run() {
   std::string input; 
   while(true) {
-    std::cout << "$ "; 
+    std::cout << "$ " << std::flush;
     if (!std::getline(std::cin, input)) break;
 
     handleCommand(input); 
@@ -78,10 +78,8 @@ void Shell::handleCommand(const std::string& input) {
 
       if(path[0] == '/') {
         if (chdir(path.c_str()) != 0) std::cout << "cd: " << path << ": No such file or directory\n";
-        else {
-          std::cout << "cd: " << path << ": No such file or directory\n";
-          std::cout << "$ " << std::flush;
-        } 
+        else std::cout << "cd: " << path << ": No such file or directory\n";
+        
       }
       return; 
     }
