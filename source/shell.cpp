@@ -70,19 +70,21 @@ void Shell::handleCommand(const std::string& input) {
       }
       return; 
     } else if (cmd == "cd") {
-      std::string path; 
-      iss >> path; 
+        std::string path; 
+        iss >> path; 
+        if (path.empty()) return;
 
-      if(path.empty()) return; 
-      
-
-      if(path[0] == '/') {
-        if (chdir(path.c_str()) != 0) std::cout << "cd: " << path << ": No such file or directory\n";
-        else std::cout << "cd: " << path << ": No such file or directory\n";
-        
-      }
-      return; 
+        if (path[0] == '/') {   // absolute paths only
+            if (chdir(path.c_str()) != 0) {
+                std::cout << "cd: " << path << ": No such file or directory\n" << std::flush;
+            }
+        } else {
+            // relative not supported in this stage
+            std::cout << "cd: " << path << ": No such file or directory\n" << std::flush;
+        }
+        return; 
     }
+
     else {
       std::vector<std::string> tokens; 
       tokens.push_back(cmd); 
