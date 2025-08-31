@@ -19,7 +19,7 @@ void Shell::run() {
 }
 
 void Shell::handleCommand(const std::string& input) {
- static const std::vector<std::string> builtins = {"echo", "exit", "type", "pwd"};
+ static const std::vector<std::string> builtins = {"echo", "exit", "type", "pwd", "cd"};
   std::istringstream iss(input); 
   std::string cmd; 
   iss >> cmd; 
@@ -61,14 +61,31 @@ void Shell::handleCommand(const std::string& input) {
       if(!found) std::cout << s << ": not found\n"; 
       return; 
     } else if(cmd == "pwd") {
-      char cwd[PATH_MAX]; 
+      char cwd[PATH_MAX]; // this is a buffer
+      // getcwd stands for "get current working directory"
       if (getcwd(cwd, sizeof(cwd)) != nullptr) {
         std::cout << cwd << "\n"; 
       } else {
-        perror("getcwd"); 
+        perror("getcwd");  
       }
       return; 
-    } else {
+    } else if (cmd == "cd") {
+      std::string path; 
+      iss >> path; 
+
+      if(path.empty()) {
+        return; 
+      }
+
+      if(path[0] == '/') {
+        if (chdir(path.c_str()) != 0) {
+          std::cerr <"cd: " << path << ": No such file or directory\n"; 
+        } else {
+          std::cerr << "cd: " << path << ": No such file or directory\n";
+    }
+      }
+    }
+    else {
       std::vector<std::string> tokens; 
       tokens.push_back(cmd); 
       std::string arg; 
@@ -78,7 +95,7 @@ void Shell::handleCommand(const std::string& input) {
       for(auto &t : tokens) argv.push_back(const_cast<char*>(t.c_str())); 
       argv.push_back(nullptr); 
 
-      pid_t pid = fork(); 
+      pid_t pid = fork();  // pid = process id, and fork is system call in Unix/Linux that creates a new process. 
       if(pid == 0) {
         // child
         execvp(argv[0], argv.data()); 
@@ -87,11 +104,11 @@ void Shell::handleCommand(const std::string& input) {
       } else if (pid > 0) {
         // parent 
         int status; 
-        waitpid(pid, &status, 0); 
+        waitpid(pid, &status, 0); // waitpid is a system call in Unix/Linux used by a parent process to wait for a specific child process to finish.
       } else {
         perror("fork"); 
       }
       return; 
     }
-
+    
 }
