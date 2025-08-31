@@ -19,32 +19,35 @@ void Shell::run() {
 }
 
 std::vector<std::string> tokenize(const std::string& input) {
-  std::vector<std::string> tokens; 
-  std::string curr; 
-  bool singleQ =false; 
-  for(size_t i = 0; i < input.size(); ++i) {
-    char c = input[i]; 
-    if (c == '\'') {
-      singleQ = !singleQ; 
-      continue;
+    std::vector<std::string> tokens;
+    std::string curr;
+    bool in_single_quote = false;
+
+    for (size_t i = 0; i < input.size(); ++i) {
+        char c = input[i];
+
+        if (c == '\'') {
+            in_single_quote = !in_single_quote;
+            continue; 
+        }
+
+        if (!in_single_quote && std::isspace(static_cast<unsigned char>(c))) {
+            if (!curr.empty()) {
+                tokens.push_back(curr);
+                curr.clear();
+            }
+        } else {
+            curr += c;
+        }
     }
-  }
 
-  if(!singleQ && std::isspace(c)) {
     if (!curr.empty()) {
-      tokens.push_back(curr); 
-      curr.clear(); 
-    } 
-  } else {
-    curr += c; 
-  }
+        tokens.push_back(curr);
+    }
 
-  if(!curr.empty()) {
-    tokens.push_back(); 
-  }
-
-  return tokens; 
+    return tokens;
 }
+
 
 void Shell::handleCommand(const std::string& input) {
  static const std::vector<std::string> builtins = {"echo", "exit", "type", "pwd", "cd"};
@@ -61,11 +64,12 @@ void Shell::handleCommand(const std::string& input) {
     }
     exit(0); 
   } else if (cmd == "echo") {
-    std::string s;
-    std::getline(iss, s); 
-    if(!s.empty() && s[0] == ' ') s.erase(0,1); 
-    std::cout << s << "\n"; 
-    return; 
+        for (size_t i = 1; i < tokens.size(); ++i) {
+            if (i > 1) std::cout << " ";
+            std::cout << tokens[i];
+        }
+        std::cout << "\n";
+        return;
   } else if (cmd == "type") { 
      std::string s; iss>>s;
       if(std::find(builtins.begin(), builtins.end(), s) != builtins.end()) {
