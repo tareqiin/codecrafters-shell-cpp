@@ -73,16 +73,15 @@ void Shell::handleCommand(const std::string& input) {
       std::string path; 
       iss >> path; 
 
-      if(path.empty()) {
-        return; 
-      }
+      if(path.empty()) return; 
+      
 
       if(path[0] == '/') {
         if (chdir(path.c_str()) != 0) {
           std::cerr <"cd: " << path << ": No such file or directory\n"; 
         } else {
           std::cerr << "cd: " << path << ": No such file or directory\n";
-    }
+        }
       }
     }
     else {
