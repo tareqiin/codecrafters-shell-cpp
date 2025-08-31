@@ -57,20 +57,20 @@ void Shell::handleCommand(const std::string& input) {
 
   if (cmd.empty()) return;
 
-  if (cmd == "exit") {
-    int code = 0; 
-    if (iss >> code) {
-      exit(code); 
-    }
-    exit(0); 
-  } else if (cmd == "echo") {
+    if (cmd == "exit") {
+      int code = 0; 
+      if (iss >> code) {
+        exit(code); 
+      }
+      exit(0); 
+    } else if (cmd == "echo") {
         for (size_t i = 1; i < tokens.size(); ++i) {
             if (i > 1) std::cout << " ";
             std::cout << tokens[i];
         }
         std::cout << "\n";
         return;
-  } else if (cmd == "type") { 
+    } else if (cmd == "type") { 
      std::string s; iss>>s;
       if(std::find(builtins.begin(), builtins.end(), s) != builtins.end()) {
         std::cout << s << " is a shell builtin\n";
