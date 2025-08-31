@@ -18,11 +18,40 @@ void Shell::run() {
   }
 }
 
+std::vector<std::string> tokenize(const std::string& input) {
+  std::vector<std::string> tokens; 
+  std::string curr; 
+  bool singleQ =false; 
+  for(size_t i = 0; i < input.size(); ++i) {
+    char c = input[i]; 
+    if (c == '\'') {
+      singleQ = !singleQ; 
+      continue;
+    }
+  }
+
+  if(!singleQ && std::isspace(c)) {
+    if (!curr.empty()) {
+      tokens.push_back(curr); 
+      curr.clear(); 
+    } 
+  } else {
+    curr += c; 
+  }
+
+  if(!curr.empty()) {
+    tokens.push_back(); 
+  }
+
+  return tokens; 
+}
+
 void Shell::handleCommand(const std::string& input) {
  static const std::vector<std::string> builtins = {"echo", "exit", "type", "pwd", "cd"};
-  std::istringstream iss(input); 
-  std::string cmd; 
-  iss >> cmd; 
+  
+  std::vector<std::string> tokens = tokenize(input); 
+  std::string cmd = tokens[0]; 
+
   if (cmd.empty()) return;
 
   if (cmd == "exit") {
