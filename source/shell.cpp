@@ -46,7 +46,11 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
         }
 
         if (c == '\\' && !in_single_quote) {
-            escape_next = true;
+            curr+= c; 
+            if(i + 1 < input.size()) {
+                curr += input[i+1]; 
+                ++i; 
+            }
             continue;
         }
 
