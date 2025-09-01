@@ -38,40 +38,39 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
     for (size_t i = 0; i < input.size(); ++i) {
         char c = input[i];
 
-        // Backslash escapes next character outside single quotes
         if (c == '\\' && !in_single_quote) {
-            curr += c; // keep the backslash
+            curr += c; 
             if (i + 1 < input.size()) {
-                curr += input[i + 1]; // keep escaped character
-                ++i; // skip next character
+                curr += input[i + 1]; 
+                i++; 
             }
             continue;
         }
 
-        // Single quotes
+        
         if (c == '\'' && !in_double_quote) {
             in_single_quote = !in_single_quote;
-            continue;
+            continue; 
         }
 
-        // Double quotes
+        /
         if (c == '"' && !in_single_quote) {
             in_double_quote = !in_double_quote;
-            continue;
+            continue; 
         }
 
-        // Split tokens on unquoted spaces
         if (!in_single_quote && !in_double_quote && std::isspace(static_cast<unsigned char>(c))) {
             if (!curr.empty()) {
                 tokens.push_back(curr);
                 curr.clear();
             }
         } else {
-            curr += c; // add character to token
+            curr += c; // add character to current token
         }
     }
 
     if (!curr.empty()) tokens.push_back(curr);
+
     return tokens;
 }
 
