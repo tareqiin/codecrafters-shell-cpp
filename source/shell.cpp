@@ -8,6 +8,17 @@
 #include <sys/wait.h>    
 #include <limits.h> 
 
+/*
+using name space std cost me alot so I got rid of it.
+
+the tokenize function breaks an input command string into separate tokens while handling single-qouted strings
+tokenize("ls  -l   '/home/user dir'");
+        -> ["ls", "-l", "/home/user dir"]
+
+handle commands function handles commands as its name suggests 
+
+I used stringstream for parsing, {it's Heavier, slower for concatenation} 
+*/
 void Shell::run() {
   std::string input; 
   while(true) {
@@ -18,33 +29,42 @@ void Shell::run() {
   }
 }
 
-  std::vector<std::string> Shell::tokenize(const std::string& input) {
-      std::vector<std::string> tokens;
-      std::string curr;
-      bool in_single_quote = false;
+std::vector<std::string> Shell::tokenize(const std::string& input) {
+    std::vector<std::string> tokens;
+    std::string curr;
+    bool in_single_quote = false;
+    bool in_double_quote = false; // consistent naming
 
-      for (size_t i = 0; i < input.size(); ++i) {
-          char c = input[i];
+    for (size_t i = 0; i < input.size(); ++i) {
+        char c = input[i];
 
-          if (c == '\'') {
-              in_single_quote = !in_single_quote;
-              continue;
-          }
+        // handle single quotes
+        if (c == '\'' && !in_double_quote) {
+            in_single_quote = !in_single_quote;
+            continue; // skip the quote
+        }
 
-          if (!in_single_quote && std::isspace(static_cast<unsigned char>(c))) {
-              if (!curr.empty()) {
-                  tokens.push_back(curr);
-                  curr.clear();
-              }
-          } else {
-              curr += c;
-          }
-      }
+        // handle double quotes
+        if (c == '"' && !in_single_quote) {
+            in_double_quote = !in_double_quote;
+            continue; // skip the quote
+        }
 
-      if (!curr.empty()) tokens.push_back(curr);
+        // handle spaces outside quotes
+        if (!in_single_quote && !in_double_quote && std::isspace(static_cast<unsigned char>(c))) {
+            if (!curr.empty()) {
+                tokens.push_back(curr);
+                curr.clear();
+            }
+        } else {
+            curr += c; // add character to current token
+        }
+    }
 
-      return tokens;
-  }
+    if (!curr.empty()) tokens.push_back(curr);
+
+    return tokens;
+}
 
 
 
@@ -122,6 +142,23 @@ void Shell::handleCommand(const std::string& input) {
 
     } else {
         // external command
+        /*
+            execvp() requires arguments as an array of C-style strings (char*[]), not C++ std::string
+            
+            fork() duplicates the current process: 
+                            the parent process continues running 
+                            the child process is a clone that can be used to run the command
+            if pid == 0 then we r in the child process
+            if pid > 0 then we r in the parent process
+            otherwise fork failed
+
+            parent shell waits for the child process to finsih using waitpid
+            perror -> error handling 
+
+            if execvp succeeds, the current child process becomes the command other wise it prints not found message
+            -> the parent shell waits for the child process to finish using waitpid
+            -> this prevents creating ZOMBIE processes AND ensures commands finish before showing the nest shell prompt.
+        */
         std::vector<char*> argv;
         for (auto &t : tokens) argv.push_back(const_cast<char*>(t.c_str()));
         argv.push_back(nullptr);
