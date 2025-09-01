@@ -39,16 +39,10 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
     for (size_t i = 0; i < input.size(); ++i) {
         char c = input[i];
 
-        if (escape_next) {
-            curr += c;     
-            escape_next = false;
-            continue;
-        }
-
         if (c == '\\' && !in_single_quote) {
             curr+= c; 
             if(i + 1 < input.size()) {
-                curr += input[i+1]; 
+                curr += input[i + 1]; 
                 ++i; 
             }
             continue;
