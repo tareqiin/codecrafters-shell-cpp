@@ -43,7 +43,8 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
                 curr+= '\\'; 
             } else if (in_double_quote) {
                 if(i + 1 < input.size() && 
-                    (input[i+1] == '"' || input[i+1] == '\\' || input[i+1] == '$' || input[i+1] == '`')) {
+                    (input[i+1] == '"' || input[i+1] == '\\' ||
+                     input[i+1] == '$' || input[i+1] == '`')) {
                     curr += input[i+1];
                     i++; 
             } else {
@@ -84,7 +85,6 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
 
     return tokens;
 }
-
 
 
 
