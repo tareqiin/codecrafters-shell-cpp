@@ -38,13 +38,25 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
     for (size_t i = 0; i < input.size(); ++i) {
         char c = input[i];
 
-        if (c == '\\' && !in_single_quote) {
-            if (i + 1 < input.size()) {
-                curr += input[i + 1]; 
-                i++; 
+        if (c== '\\') {
+            if (in_single_quote) {
+                curr+= '\\'; 
+            } else if (in_double_quote) {
+                if(i + 1 < input.size() && 
+                    (input[i+1] == '"' || input[i+1] == '\\' || input[i+1] == '$' || input[i+1] == '`')) {
+                    curr += input[i+1];
+                    i++; 
+            } else {
+                curr += '\\'; 
             }
-            continue;
-        }
+            } else {
+                if (i + 1 < input.size()) {
+                    curr+= input[i+1]; 
+                    i++; 
+                }
+            }
+            continue; 
+        } 
 
         
         if (c == '\'' && !in_double_quote) {
