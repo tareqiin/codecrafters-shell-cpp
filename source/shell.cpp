@@ -33,24 +33,32 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
     std::vector<std::string> tokens;
     std::string curr;
     bool in_single_quote = false;
-    bool in_double_quote = false; // consistent naming
+    bool in_double_quote = false; 
+    bool escape_next = false; 
 
     for (size_t i = 0; i < input.size(); ++i) {
         char c = input[i];
 
-        // handle single quotes
+        if (escape_next) {
+            curr+= c; 
+            escape_next = false; 
+            continue; 
+        }
+        if(c=='\\' && !in_single_qoute) {
+            escape_next = true; 
+            continue; 
+        }
+
         if (c == '\'' && !in_double_quote) {
             in_single_quote = !in_single_quote;
-            continue; // skip the quote
+            continue;
         }
 
-        // handle double quotes
         if (c == '"' && !in_single_quote) {
             in_double_quote = !in_double_quote;
-            continue; // skip the quote
+            continue;
         }
 
-        // handle spaces outside quotes
         if (!in_single_quote && !in_double_quote && std::isspace(static_cast<unsigned char>(c))) {
             if (!curr.empty()) {
                 tokens.push_back(curr);
