@@ -44,7 +44,7 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
             escape_next = false; 
             continue; 
         }
-        if(c=='\\' && !in_single_qoute) {
+        if(c=='\\' && !in_single_quote) {
             escape_next = true; 
             continue; 
         }
