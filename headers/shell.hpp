@@ -11,5 +11,6 @@ private:
     std::pair<std::vector<std::string>, std::string> parseRedirection(const std::vector<std::string>& tokens); 
     void setupRedirection(const std::string& redirectFile); 
     void ensureParentDir(const std::string& path); 
+    int redirectStdoutToFile(const std::string &redirectFile); 
 
 };

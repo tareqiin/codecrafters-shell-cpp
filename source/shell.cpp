@@ -29,6 +29,36 @@ handle commands function handles commands as its name suggests
 I used stringstream for parsing, {it's Heavier, slower for concatenation} 
 */
 
+int Shell::redirectStdoutToFile(const std::string &redirectFile) {
+    if(redirectFile.empty()) return -1; 
+    ensureParentDir(redirectFile); 
+
+    int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
+    if (fd < 0) {
+        perror(open); 
+        return -1; 
+    }
+
+    int saved = dup(STDOUT_FILENO); 
+    if(saved < 0) {
+        perror("dup"); 
+        close(fd); 
+        return -1;
+    }
+
+    if(dup2(fd, STDOUT_FILENO) < 0) {
+        perror("dup2"); 
+        close(fd); 
+        close(saved); 
+        return -1; 
+    }
+
+    close(fd); 
+    return saved; 
+}
+
+
+
 
 void Shell::ensureParentDir(const std::string& path) {
     size_t pos = 0;
@@ -181,12 +211,25 @@ void Shell::handleCommand(const std::string& input) {
 
     } else if (cmd == "echo") {
         // just print everything after "echo"
-        for (size_t i = 1; i < tokens.size(); ++i) {
+        auto [cleanTokens, redirectFile] = parseRedirection(tokens); 
+        if(cleanTokens.empty()) return; 
+
+        int savedStdout = redirectStdoutToFile(redirectFile); 
+
+        for (size_t i = 1; i < cleanTokens.size(); ++i) {
             if (i > 1) std::cout << " ";
-            std::cout << tokens[i];
+            std::cout << cleantokens[i];
         }
         std::cout << "\n";
         return;
+        
+        if(savedStdout >= 0) {
+            if(dup2(savedStdout, STDOUT_FILENO < 0)) {
+                perror("dup2 restore"); 
+            }
+            close(savedStdout); 
+        }
+        return; 
 
     } else if (cmd == "type") {
         if (tokens.size() < 2) return;
