@@ -237,7 +237,7 @@ void Shell::handleCommand(const std::string& input) {
             dup2(fd, STDOUT_FILENO); // Redirect stdout to file
             close(fd); 
 
-            execvp(args[0], args.data()); 
+            execvp(argv[0], argv.data()); 
             perror("execvp faild"); 
             exit(1); 
         } else {
