@@ -9,6 +9,7 @@
 #include <limits.h> 
 #include <fcntl.h>     // for O_WRONLY, O_CREAT, O_TRUNC
 #include <unistd.h>    // for close(), dup2()
+#include <libgen.h>   // for dirname()
 
 /*
 using name space std cost me alot so I got rid of it.
@@ -21,7 +22,17 @@ handle commands function handles commands as its name suggests
 
 I used stringstream for parsing, {it's Heavier, slower for concatenation} 
 */
-
+void Shell::ensureParentDir(const std::string& path) {
+    std::string copy = path; 
+    char* dir = dirname(copy.data());  // dirname() may modify the string
+    struct stat st; 
+    if(stat(dir, &st) != 0) {
+        if(mkdir(dir, 0755) != 0) {
+            perror("mkdir"); 
+            exit(1); 
+        }
+    }
+}
 std::pair<std::vector<std::string>, std::string>
 Shell::parseRedirection(const std::vector<std::string>& tokens) {
     std::string redirectFile; 
@@ -49,6 +60,9 @@ Shell::parseRedirection(const std::vector<std::string>& tokens) {
 }
 void Shell::setupRedirection(const std::string& redirectFile) { 
     if (!redirectFile.empty()) {
+        ensureParentDir(redirectFile); 
+
+        
         int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
         if (fd < 0) {
             perror("open"); 
