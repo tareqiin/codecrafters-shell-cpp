@@ -219,19 +219,24 @@ void Shell::handleCommand(const std::string& input) {
             -> the parent shell waits for the child process to finish using waitpid
             -> this prevents creating ZOMBIE processes AND ensures commands finish before showing the nest shell prompt.
         */
-       auto [cleanTokens, redirectFile] = parseRedirection(tokens); 
-       if(cleanTokens.empty()) return; 
+    auto [cleanTokens, redirectFile] = parseRedirection(tokens);
+    if (cleanTokens.empty()) return;
 
-        std::vector<char*> argv;
-        for (auto &t : cleantokens) argv.push_back(const_cast<char*>(t.c_str()));
-        argv.push_back(nullptr);
+    std::vector<char*> argv;
+    for (auto &t : cleanTokens) {
+        argv.push_back(const_cast<char*>(t.c_str()));
+    }
+    argv.push_back(nullptr);
 
-        pid_t pid = fork(); 
-            setupRedirection(redirectFile); 
-            execvp(argv[0], argv.data()); 
-            perror("execvp faild"); 
-            exit(1); 
-        } else {
-            waitpid(pid, nullptr, 0); 
+    pid_t pid = fork();
+    if (pid == 0) {
+        setupRedirection(redirectFile); 
+        execvp(argv[0], argv.data());
+        perror("execvp failed");
+        exit(1);
+    } else {
+        waitpid(pid, nullptr, 0);
         }
+
+    }
 }
