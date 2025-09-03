@@ -34,10 +34,11 @@ void Shell::ensureParentDir(const std::string& path) {
     if(pos == std::string::npos) return; // no directory part
 
     std::string dir = path.substr(0, pos); 
+
     struct stat st{}; 
     if(stat(dir.c_str(), &st) != 0) {
 
-        if(mkdir(dir, 0755) != 0) {
+        if(mkdir(dir.c_str(), 0755) != 0) {
             perror("mkdir"); 
             exit(1); 
         }
