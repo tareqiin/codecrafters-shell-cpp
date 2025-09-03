@@ -28,7 +28,7 @@ Shell::parseRedirection(const std::vector<std::string>& tokens) {
     int redirectIndex = -1; 
 
     for(size_t i = 0; i < tokens.size(); i++) {
-        if (tokens[i] == ">" || "1>") {
+        if (tokens[i] == ">" || tokens[i] ==  "1>") {
             if (i+1 < tokens.size()) {
                 redirectFile = tokens[i+1]; 
                 redirectIndex = i; 
@@ -110,14 +110,14 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
             continue; 
         }
 
-        if (!in_single_quote && !in_double_quote && (c== '>')) {
+        if (!in_single_quote && !in_double_quote && (c == '>')) {
             if (!curr.empty()) {
                 tokens.push_back(curr);
                 curr.clear();
             }
-        } else {
             tokens.push_back(">"); 
-            continue; 
+        } else {
+            curr.push_back(c); 
         }
     }
 
@@ -223,25 +223,15 @@ void Shell::handleCommand(const std::string& input) {
        if(cleanTokens.empty()) return; 
 
         std::vector<char*> argv;
-        for (auto &t : tokens) argv.push_back(const_cast<char*>(t.c_str()));
+        for (auto &t : cleantokens) argv.push_back(const_cast<char*>(t.c_str()));
         argv.push_back(nullptr);
 
-        pid_t pid = fork();
-        if (pid == 0) {
-            int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
-            if (fd < 0) {
-                perror("open"); 
-                exit(1); 
-            }
-            // using dup2 in the child process before calling execvp is essential because this ensures that anything the child prints goes to the file instead of the terminal
-            dup2(fd, STDOUT_FILENO); // Redirect stdout to file
-            close(fd); 
-
+        pid_t pid = fork(); 
+            setupRedirection(redirectFile); 
             execvp(argv[0], argv.data()); 
             perror("execvp faild"); 
             exit(1); 
         } else {
             waitpid(pid, nullptr, 0); 
         }
-    }
 }
