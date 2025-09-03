@@ -35,7 +35,7 @@ int Shell::redirectStdoutToFile(const std::string &redirectFile) {
 
     int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
     if (fd < 0) {
-        perror(open); 
+        perror("open"); 
         return -1; 
     }
 
