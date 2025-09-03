@@ -7,6 +7,8 @@
 #include <unistd.h> 
 #include <sys/wait.h>    
 #include <limits.h> 
+#include <fcntl.h>     // for O_WRONLY, O_CREAT, O_TRUNC
+#include <unistd.h>    // for close(), dup2()
 
 /*
 using name space std cost me alot so I got rid of it.
