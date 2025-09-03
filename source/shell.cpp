@@ -112,6 +112,7 @@ void Shell::setupRedirection(const std::string& redirectFile) {
             close(fd);
             exit(1);
         }
+        
         close(fd);
     }
 }
