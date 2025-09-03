@@ -296,8 +296,10 @@ void Shell::handleCommand(const std::string& input) {
         if (pid == 0) {
             setupRedirection(redirectFile);
             execvp(argv[0], argv.data());
-            perror("execvp failed");
-            exit(1);
+            std::cerr << argv[0] << ": command not found"; 
+
+
+            exit(127);
         } else if (pid > 0) {
             waitpid(pid, nullptr, 0);
         } else {
