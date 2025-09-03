@@ -228,16 +228,20 @@ void Shell::handleCommand(const std::string& input) {
 
         pid_t pid = fork();
         if (pid == 0) {
-            setupRedirection(redirectFile); 
-            execvp(argv[0], argv.data());
-            std::cout << argv[0] << ": command not found\n";
-            exit(1);
-        } else if (pid > 0) {
-            int status;
-            waitpid(pid, &status, 0);
+            int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
+            if (fd < 0) {
+                perror("open"); 
+                exit(1); 
+            }
+            // using dup2 in the child process before calling execvp is essential because this ensures that anything the child prints goes to the file instead of the terminal
+            dup2(fd, STDOUT_FILENO); // Redirect stdout to file
+            close(fd); 
+
+            execvp(args[0], args.data()); 
+            perror("execvp faild"); 
+            exit(1); 
         } else {
-            perror("fork");
+            waitpid(pid, nullptr, 0); 
         }
-        return;
     }
 }
