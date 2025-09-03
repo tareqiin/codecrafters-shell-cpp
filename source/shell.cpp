@@ -4,9 +4,9 @@
 #include <vector>
 #include <algorithm> // for std::find
 #include <cstdlib>
-#include <unistd.h> 
-#include <sys/wait.h>    
-#include <limits.h> 
+#include <unistd.h>
+#include <sys/wait.h>
+#include <limits.h>
 #include <fcntl.h>     // for O_WRONLY, O_CREAT, O_TRUNC
 #include <unistd.h>    // for close(), dup2()
 #include <libgen.h>   // for dirname()
@@ -17,34 +17,32 @@
 #include <cstdio>
 
 
-
-
 int Shell::redirectStdoutToFile(const std::string &redirectFile) {
-    if(redirectFile.empty()) return -1; 
-    ensureParentDir(redirectFile); 
+    if (redirectFile.empty()) return -1;
+    ensureParentDir(redirectFile);
 
-    int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
+    int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0) {
-        perror("open"); 
-        return -1; 
-    }
-
-    int saved = dup(STDOUT_FILENO); 
-    if(saved < 0) {
-        perror("dup"); 
-        close(fd); 
+        perror("open");
         return -1;
     }
 
-    if(dup2(fd, STDOUT_FILENO) < 0) {
-        perror("dup2"); 
-        close(fd); 
-        close(saved); 
-        return -1; 
+    int saved = dup(STDOUT_FILENO);
+    if (saved < 0) {
+        perror("dup");
+        close(fd);
+        return -1;
     }
 
-    close(fd); 
-    return saved; 
+    if (dup2(fd, STDOUT_FILENO) < 0) {
+        perror("dup2");
+        close(fd);
+        close(saved);
+        return -1;
+    }
+
+    close(fd);
+    return saved;
 }
 
 
@@ -58,66 +56,77 @@ void Shell::ensureParentDir(const std::string& path) {
         if (stat(dir.c_str(), &st) != 0) {
             if (mkdir(dir.c_str(), 0755) != 0 && errno != EEXIST) {
                 perror(("mkdir " + dir).c_str());
-                exit(1);
+                return;
             }
         } else if (!S_ISDIR(st.st_mode)) {
             fprintf(stderr, "%s exists and is not a directory\n", dir.c_str());
-            exit(1);
+            return;
         }
     }
 }
 
 std::pair<std::vector<std::string>, std::string>
 Shell::parseRedirection(const std::vector<std::string>& tokens) {
-    std::string redirectFile; 
-    int redirectIndex = -1; 
+    std::string redirectFile;
+    int redirectIndex = -1;
 
-    for(size_t i = 0; i < tokens.size(); i++) {
-        if (tokens[i] == ">" || tokens[i] ==  "1>") {
-            if (i+1 < tokens.size()) {
-                redirectFile = tokens[i+1]; 
-                redirectIndex = i; 
+    for (size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == ">" || tokens[i] == "1>" || tokens[i] == "2>") {
+            if (i + 1 < tokens.size()) {
+                redirectFile = tokens[i + 1];
+                redirectIndex = static_cast<int>(i);
             } else {
-                std::cerr << "Syntac error near unexpected token `newline`\n"; 
-                return {{}, ""}; 
+                std::cerr << "Syntax error near unexpected token `newline'\n";
+                return {{}, ""};
             }
-            break; 
+            break;
         }
     }
-    std::vector<std::string> cleanTokens; 
-    if (redirectIndex != -1) { 
-        cleanTokens.insert(cleanTokens.end(), tokens.begin(), tokens.begin() + redirectIndex); 
+    std::vector<std::string> cleanTokens;
+    if (redirectIndex != -1) {
+        cleanTokens.insert(cleanTokens.end(), tokens.begin(), tokens.begin() + redirectIndex);
+        if (!cleanTokens.empty()) {
+            std::string last = cleanTokens.back();
+            if (last == "1" || last == "2") {
+                cleanTokens.pop_back();
+            }
+        }
     } else {
-        cleanTokens = tokens; 
+        cleanTokens = tokens;
     }
-    return {cleanTokens, redirectFile}; 
+    return {cleanTokens, redirectFile};
 }
 
 
-void Shell::setupRedirection(const std::string& redirectFile) { 
+void Shell::setupRedirection(const std::string& redirectFile) {
     if (!redirectFile.empty()) {
-        ensureParentDir(redirectFile); 
+        ensureParentDir(redirectFile);
 
-        int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
+        int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd < 0) {
-            perror("open"); 
-            exit(1); 
+            perror("open");
+            exit(1);
         }
-        dup2(fd, STDOUT_FILENO); 
-        close(fd); 
+        if (dup2(fd, STDOUT_FILENO) < 0) {
+            perror("dup2");
+            close(fd);
+            exit(1);
+        }
+        close(fd);
     }
 }
 
 
 void Shell::run() {
-  std::string input; 
-  while(true) {
-    std::cout << "$ " << std::flush;
-    if (!std::getline(std::cin, input)) break;
+    std::string input;
+    while (true) {
+        std::cout << "$ " << std::flush;
+        if (!std::getline(std::cin, input)) break;
 
-    handleCommand(input); 
-  }
+        handleCommand(input);
+    }
 }
+
 std::vector<std::string> Shell::tokenize(const std::string& input) {
     std::vector<std::string> tokens;
     std::string curr;
@@ -181,10 +190,9 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
 }
 
 
-
 void Shell::handleCommand(const std::string& input) {
     static const std::vector<std::string> builtins = {"echo", "exit", "type", "pwd", "cd"};
-  
+
     std::vector<std::string> tokens = this->tokenize(input);
     if (tokens.empty()) return;
 
@@ -198,24 +206,25 @@ void Shell::handleCommand(const std::string& input) {
         exit(code);
 
     } else if (cmd == "echo") {
-        // just print everything after "echo"
-        auto [cleanTokens, redirectFile] = parseRedirection(tokens); 
-        if(cleanTokens.empty()) return; 
+        auto [cleanTokens, redirectFile] = parseRedirection(tokens);
+        if (cleanTokens.empty()) return;
 
-        int savedStdout = redirectStdoutToFile(redirectFile); 
+        int savedStdout = redirectStdoutToFile(redirectFile);
 
         for (size_t i = 1; i < cleanTokens.size(); ++i) {
             if (i > 1) std::cout << " ";
             std::cout << cleanTokens[i];
         }
-        std::cout << "\n";        
-        if(savedStdout >= 0) {
-            if(dup2(savedStdout, STDOUT_FILENO < 0)) {
-                perror("dup2 restore"); 
+        std::cout << "\n";
+        std::cout.flush();
+
+        if (savedStdout >= 0) {
+            if (dup2(savedStdout, STDOUT_FILENO) < 0) {
+                perror("dup2 restore");
             }
-            close(savedStdout); 
+            close(savedStdout);
         }
-        return; 
+        return;
 
     } else if (cmd == "type") {
         if (tokens.size() < 2) return;
@@ -251,7 +260,13 @@ void Shell::handleCommand(const std::string& input) {
         return;
 
     } else if (cmd == "cd") {
-        if (tokens.size() < 2) return;
+        if (tokens.size() < 2) {
+            char* home = getenv("HOME");
+            if (!home || chdir(home) != 0) {
+                std::cout << "cd: HOME not set or cannot change directory\n";
+            }
+            return;
+        }
         std::string path = tokens[1];
         if (path == "~") {
             char* home = getenv("HOME");
@@ -267,24 +282,26 @@ void Shell::handleCommand(const std::string& input) {
 
     } else {
         // external command
+        auto [cleanTokens, redirectFile] = parseRedirection(tokens);
+        if (cleanTokens.empty()) return;
 
-    auto [cleanTokens, redirectFile] = parseRedirection(tokens);
-    if (cleanTokens.empty()) return;
+        std::vector<char*> argv;
+        std::vector<std::string> argv_storage = cleanTokens;
+        for (auto &t : argv_storage) {
+            argv.push_back(const_cast<char*>(t.c_str()));
+        }
+        argv.push_back(nullptr);
 
-    std::vector<char*> argv;
-    for (auto &t : cleanTokens) {
-        argv.push_back(const_cast<char*>(t.c_str()));
-    }
-    argv.push_back(nullptr);
-
-    pid_t pid = fork();
-    if (pid == 0) {
-        setupRedirection(redirectFile); 
-        execvp(argv[0], argv.data());
-        perror("execvp failed");
-        exit(1);
-    } else {
-        waitpid(pid, nullptr, 0);
+        pid_t pid = fork();
+        if (pid == 0) {
+            setupRedirection(redirectFile);
+            execvp(argv[0], argv.data());
+            perror("execvp failed");
+            exit(1);
+        } else if (pid > 0) {
+            waitpid(pid, nullptr, 0);
+        } else {
+            perror("fork");
         }
 
     }
