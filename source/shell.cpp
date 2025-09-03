@@ -22,13 +22,22 @@ handle commands function handles commands as its name suggests
 
 I used stringstream for parsing, {it's Heavier, slower for concatenation} 
 */
+
 void Shell::ensureParentDir(const std::string& path) {
-    std::string copy = path; 
-    char* dir = dirname(copy.data());  // dirname() may modify the string
-    struct stat st; 
-    if(stat(dir, &st) != 0) {
+    size_t pos = path.find_last_of('/'); 
+    if(pos == std::string::npos) return; // no directory part
+
+    std::string dir = path.substr(0, pos); 
+    struct stat st{}; 
+    if(stat(dir.c_str(), &st) != 0) {
+
         if(mkdir(dir, 0755) != 0) {
             perror("mkdir"); 
+            exit(1); 
+        }
+    } else {
+        if(!S_ISDIR(st.st_mode)) {
+            fprintf(stderr, "Error: %s exits and is not a directory\n", dir.c_str()); 
             exit(1); 
         }
     }
@@ -58,11 +67,12 @@ Shell::parseRedirection(const std::vector<std::string>& tokens) {
     }
     return {cleanTokens, redirectFile}; 
 }
+
+
 void Shell::setupRedirection(const std::string& redirectFile) { 
     if (!redirectFile.empty()) {
         ensureParentDir(redirectFile); 
 
-        
         int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
         if (fd < 0) {
             perror("open"); 
@@ -72,6 +82,8 @@ void Shell::setupRedirection(const std::string& redirectFile) {
         close(fd); 
     }
 }
+
+
 void Shell::run() {
   std::string input; 
   while(true) {
