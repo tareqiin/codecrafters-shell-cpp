@@ -110,7 +110,7 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
             continue; 
         }
 
-        if (!in_single_quote && !in_double_quote && std::isspace(static_cast<unsigned char>(c)) && (c== '>')) {
+        if (!in_single_quote && !in_double_quote && (c== '>')) {
             if (!curr.empty()) {
                 tokens.push_back(curr);
                 curr.clear();
