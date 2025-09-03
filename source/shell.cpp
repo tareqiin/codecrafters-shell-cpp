@@ -30,7 +30,7 @@ I used stringstream for parsing, {it's Heavier, slower for concatenation}
 */
 
 
-void Shell::ensureParentDirs(const std::string& path) {
+void Shell::ensureParentDir(const std::string& path) {
     size_t pos = 0;
     while ((pos = path.find('/', pos + 1)) != std::string::npos) {
         std::string dir = path.substr(0, pos);
