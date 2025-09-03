@@ -224,11 +224,11 @@ void Shell::handleCommand(const std::string& input) {
         if (path == "~") {
             char* home = getenv("HOME");
             if (!home || chdir(home) != 0) {
-                std::cout << "cd: " << path << ": No such file or directory\n";
+                std::cout << "$\n";
             }
         } else {
             if (chdir(path.c_str()) != 0) {
-                std::cout << "cd: " << path << ": No such file or directory\n";
+                std::cout << "$\n"
             }
         }
         return;
