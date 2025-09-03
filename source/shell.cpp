@@ -218,7 +218,7 @@ void Shell::handleCommand(const std::string& input) {
 
         for (size_t i = 1; i < cleanTokens.size(); ++i) {
             if (i > 1) std::cout << " ";
-            std::cout << cleantokens[i];
+            std::cout << cleanTokens[i];
         }
         std::cout << "\n";
         return;
