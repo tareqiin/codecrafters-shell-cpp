@@ -228,7 +228,7 @@ void Shell::handleCommand(const std::string& input) {
             }
         } else {
             if (chdir(path.c_str()) != 0) {
-                std::cout << "$\n"
+                std::cout << "$\n"; 
             }
         }
         return;
