@@ -29,26 +29,26 @@ handle commands function handles commands as its name suggests
 I used stringstream for parsing, {it's Heavier, slower for concatenation} 
 */
 
-void Shell::ensureParentDir(const std::string& path) {
-    size_t pos = path.find_last_of('/'); 
-    if(pos == std::string::npos) return; // no directory part
 
-    std::string dir = path.substr(0, pos); 
+void Shell::ensureParentDirs(const std::string& path) {
+    size_t pos = 0;
+    while ((pos = path.find('/', pos + 1)) != std::string::npos) {
+        std::string dir = path.substr(0, pos);
+        if (dir.empty()) continue;
 
-    struct stat st{}; 
-    if(stat(dir.c_str(), &st) != 0) {
-
-        if(mkdir(dir.c_str(), 0755) != 0) {
-            perror("mkdir"); 
-            exit(1); 
-        }
-    } else {
-        if(!S_ISDIR(st.st_mode)) {
-            fprintf(stderr, "Error: %s exits and is not a directory\n", dir.c_str()); 
-            exit(1); 
+        struct stat st{};
+        if (stat(dir.c_str(), &st) != 0) {
+            if (mkdir(dir.c_str(), 0755) != 0 && errno != EEXIST) {
+                perror(("mkdir " + dir).c_str());
+                exit(1);
+            }
+        } else if (!S_ISDIR(st.st_mode)) {
+            fprintf(stderr, "%s exists and is not a directory\n", dir.c_str());
+            exit(1);
         }
     }
 }
+
 std::pair<std::vector<std::string>, std::string>
 Shell::parseRedirection(const std::vector<std::string>& tokens) {
     std::string redirectFile; 
@@ -224,11 +224,11 @@ void Shell::handleCommand(const std::string& input) {
         if (path == "~") {
             char* home = getenv("HOME");
             if (!home || chdir(home) != 0) {
-                std::cout << "$\n";
+                std::cout << "cd: " << path << ": No such file or directory\n";
             }
         } else {
             if (chdir(path.c_str()) != 0) {
-                std::cout << "$\n"; 
+                std::cout << "cd: " << path << ": No such file or directory\n";
             }
         }
         return;
