@@ -10,6 +10,12 @@
 #include <fcntl.h>     // for O_WRONLY, O_CREAT, O_TRUNC
 #include <unistd.h>    // for close(), dup2()
 #include <libgen.h>   // for dirname()
+#include <cerrno>
+#include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <cstdio>
+
 
 /*
 using name space std cost me alot so I got rid of it.
