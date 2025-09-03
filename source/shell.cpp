@@ -19,6 +19,43 @@ handle commands function handles commands as its name suggests
 
 I used stringstream for parsing, {it's Heavier, slower for concatenation} 
 */
+
+std::pair<std::vector<std::string>, std::string>
+Shell::parseRedirection(const std::vector<std::string>& tokens) {
+    std::string redirectFile; 
+    int redirectIndex = -1; 
+
+    for(size_t i = 0; i < tokens.size(); i++) {
+        if (tokens[i] == ">" || "1>") {
+            if (i+1 < tokens.size()) {
+                redirectFile = tokens[i+1]; 
+                redirectIndex = i; 
+            } else {
+                std::cerr << "Syntac error near unexpected token `newline`\n"; 
+                return {{}, ""}; 
+            }
+            break; 
+        }
+    }
+    std::vector<std::string> cleanTokens; 
+    if (redirectIndex != -1) { 
+        cleanTokens.insert(cleanTokens.end(), tokens.begin(), tokens.begin() + redirectIndex); 
+    } else {
+        cleanTokens = tokens; 
+    }
+    return {cleanTokens, redirectFile}; 
+}
+void Shell::setupRedirection(const std::string& redirectFile) { 
+    if (!redirectFile.empty()) {
+        int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
+        if (fd < 0) {
+            perror("open"); 
+            exit(1); 
+        }
+        dup2(fd, STDOUT_FILENO); 
+        close(fd); 
+    }
+}
 void Shell::run() {
   std::string input; 
   while(true) {
@@ -38,7 +75,7 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
     for (size_t i = 0; i < input.size(); ++i) {
         char c = input[i];
 
-        if (c== '\\') {
+        if (c == '\\') {
             if (in_single_quote) {
                 curr+= '\\'; 
             } else if (in_double_quote) {
@@ -71,13 +108,14 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
             continue; 
         }
 
-        if (!in_single_quote && !in_double_quote && std::isspace(static_cast<unsigned char>(c))) {
+        if (!in_single_quote && !in_double_quote && std::isspace(static_cast<unsigned char>(c)) && (c== '>')) {
             if (!curr.empty()) {
                 tokens.push_back(curr);
                 curr.clear();
             }
         } else {
-            curr += c; // add character to current token
+            tokens.push_back(">"); 
+            continue; 
         }
     }
 
@@ -179,12 +217,16 @@ void Shell::handleCommand(const std::string& input) {
             -> the parent shell waits for the child process to finish using waitpid
             -> this prevents creating ZOMBIE processes AND ensures commands finish before showing the nest shell prompt.
         */
+       auto [cleanTokens, redirectFile] = parseRedirection(tokens); 
+       if(cleanTokens.empty()) return; 
+
         std::vector<char*> argv;
         for (auto &t : tokens) argv.push_back(const_cast<char*>(t.c_str()));
         argv.push_back(nullptr);
 
         pid_t pid = fork();
         if (pid == 0) {
+            setupRedirection(redirectFile); 
             execvp(argv[0], argv.data());
             std::cout << argv[0] << ": command not found\n";
             exit(1);
