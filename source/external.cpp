@@ -8,8 +8,6 @@
 void Shell::executeExternal(const std::vector<std::string>& tokens) {
     if (tokens.empty()) return;
 
-    auto parseResult = parseRedirection(tokens);
-    std::vector<std::string> cleanTokens = parseResult.first;
     auto [cleanTokens, redirs] = parseRedirection(tokens);
     if (cleanTokens.empty()) return;
 
