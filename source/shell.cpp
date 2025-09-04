@@ -194,7 +194,13 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
                 tokens.push_back(curr);
                 curr.clear();
             }
-            tokens.push_back(">");
+            if (!tokens.empty() && (tokens.back() == "1") || tokens.back() == "2") {
+                std::string fd = tokens.back(); 
+                tokens.pop_back(); 
+                tokens.push_back(fd + ">"); 
+            } else {
+                tokens.push_back(">")
+            }
             continue;
         }
 
