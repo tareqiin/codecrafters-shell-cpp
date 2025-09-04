@@ -31,7 +31,7 @@ private:
     std::vector<std::string> tokenize(const std::string& input);
 
     std::pair<std::vector<std::string>, Redirs>
-    Shell::parseRedirection(const std::vector<std::string>& tokens); 
+    parseRedirection(const std::vector<std::string>& tokens);
 
     void setupRedirection(const std::string& stdoutFile, const std::string& stderrFile);
     void ensureParentDir(const std::string& path);
