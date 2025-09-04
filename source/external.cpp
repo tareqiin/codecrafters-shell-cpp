@@ -20,7 +20,7 @@ void Shell::executeExternal(const std::vector<std::string>& tokens) {
     pid_t pid = fork();
     if (pid == 0) {
         // Child process: setup redirection then exec
-        setupRedirection(redirectFile);
+        setupRedirection(redirs.first, redirs.second); 
         execvp(argv[0], argv.data());
 
         // If execvp fails
