@@ -6,10 +6,14 @@
 #include <string>
 
 void Shell::executeExternal(const std::vector<std::string>& tokens) {
-    auto [cleanTokens, redirectFile] = parseRedirection(tokens);
+    if (tokens.empty()) return;
+
+    auto parseResult = parseRedirection(tokens);
+    std::vector<std::string> cleanTokens = parseResult.first;
+    std::pair<std::string, std::string> redirs = parseResult.second;
+
     if (cleanTokens.empty()) return;
 
-    // Build argv
     std::vector<char*> argv;
     std::vector<std::string> argv_storage = cleanTokens;
     for (auto &t : argv_storage) {
@@ -19,16 +23,11 @@ void Shell::executeExternal(const std::vector<std::string>& tokens) {
 
     pid_t pid = fork();
     if (pid == 0) {
-        // Child process: setup redirection then exec
-        setupRedirection(redirs.first, redirs.second); 
+        setupRedirection(redirs.first, redirs.second);
         execvp(argv[0], argv.data());
-
-        // If execvp fails
         std::cerr << argv[0] << ": command not found\n";
-        std::cout.flush();
         exit(127);
     } else if (pid > 0) {
-        // Parent waits
         waitpid(pid, nullptr, 0);
     } else {
         perror("fork");
