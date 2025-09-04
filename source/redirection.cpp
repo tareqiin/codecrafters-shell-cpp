@@ -80,63 +80,45 @@ static bool is_all_digits(const std::string &s) {
 }
 std::pair<std::vector<std::string>, std::pair<std::string, std::string>>
 ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
-    ParseResult res;
+   Redirs redirs;
+int redirectIndex = -1;
 
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        const std::string &t = tokens[i];
-
-        // Combined tokens first
-        if (t == ">" || t == "1>") {
-            if (i + 1 >= tokens.size()) { std::cerr << "Syntax error near unexpected token `newline'\n"; return res; }
-            res.stdoutFile = tokens[i+1];
-            res.stdoutAppend = false;
-            ++i;
-            continue;
+for (size_t i = 0; i < tokens.size(); i++) {
+    if (tokens[i] == ">" || tokens[i] == "1>") {
+        if (i + 1 < tokens.size()) {
+            redirs.stdoutRedir.file = tokens[i + 1];
+            redirs.stdoutRedir.append = false;
+            redirectIndex = static_cast<int>(i);
+        } else {
+            std::cerr << "Syntax error near unexpected token `newline'\n";
+            return {{}, {}};
         }
-        if (t == ">>" || t == "1>>") {
-            if (i + 1 >= tokens.size()) { std::cerr << "Syntax error near unexpected token `newline'\n"; return res; }
-            res.stdoutFile = tokens[i+1];
-            res.stdoutAppend = true;
-            ++i;
-            continue;
-        }
-        if (t == "2>") {
-            if (i + 1 >= tokens.size()) { std::cerr << "Syntax error near unexpected token `newline'\n"; return res; }
-            res.stderrFile = tokens[i+1];
-            res.stderrAppend = false;
-            ++i;
-            continue;
-        }
-        if (t == "2>>") {
-            if (i + 1 >= tokens.size()) { std::cerr << "Syntax error near unexpected token `newline'\n"; return res; }
-            res.stderrFile = tokens[i+1];
-            res.stderrAppend = true;
-            ++i;
-            continue;
-        }
-
-        // Split forms: ["2", ">", "file"] or ["2", ">>", "file"] or ["1", ">>", "file"]
-        if (is_all_digits(t) && i + 2 < tokens.size() &&
-            (tokens[i+1] == ">" || tokens[i+1] == ">>")) {
-            const std::string &op = tokens[i+1];
-            const std::string &fname = tokens[i+2];
-            if (t == "2") {
-                res.stderrFile = fname;
-                res.stderrAppend = (op == ">>");
-            } else {
-                // treat other fd numbers as stdout (1) redirection
-                res.stdoutFile = fname;
-                res.stdoutAppend = (op == ">>");
-            }
-            i += 2; // skip the operator and filename
-            continue;
-        }
-
-        // Otherwise this token is a normal command/arg
-        res.cleanTokens.push_back(t);
+        break;
     }
+    if (tokens[i] == ">>" || tokens[i] == "1>>") {
+        if (i + 1 < tokens.size()) {
+            redirs.stdoutRedir.file = tokens[i + 1];
+            redirs.stdoutRedir.append = true;
+            redirectIndex = static_cast<int>(i);
+        } else {
+            std::cerr << "Syntax error near unexpected token `newline'\n";
+            return {{}, {}};
+        }
+        break;
+    }
+    if (tokens[i] == "2>" || tokens[i] == "2>>") {
+        if (i + 1 < tokens.size()) {
+            redirs.stderrRedir.file = tokens[i + 1];
+            redirs.stderrRedir.append = (tokens[i] == "2>>");
+            redirectIndex = static_cast<int>(i);
+        } else {
+            std::cerr << "Syntax error near unexpected token `newline'\n";
+            return {{}, {}};
+        }
+        break;
+    }
+}
 
-    return res;
 }
 
 void Shell::setupRedirection(const ParseResult &pr) {
