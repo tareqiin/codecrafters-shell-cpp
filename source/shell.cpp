@@ -199,7 +199,7 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
                 tokens.pop_back(); 
                 tokens.push_back(fd + ">"); 
             } else {
-                tokens.push_back(">")
+                tokens.push_back(">"); 
             }
             continue;
         }
