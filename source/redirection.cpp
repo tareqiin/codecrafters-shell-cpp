@@ -98,7 +98,7 @@ Shell::parseRedirection(const std::vector<std::string>& tokens) {
             stdoutFile.append(tokens[i+1]); 
             redirectIndex = static_cast<int>(i); 
         } else {
-            std::cerr << "Syntax error near unexpected token `newline`\n"; 
+            std::cerr << "Syntax error near unexpected token `newline` << we are hear>> \n"; 
             return {{}, {"", ""}}; 
         }
     }
