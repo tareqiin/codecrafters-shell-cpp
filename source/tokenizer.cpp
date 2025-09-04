@@ -1,6 +1,7 @@
 #include "../headers/shell.hpp"
 #include <vector> 
 #include <string> 
+#include <cctype>
 
 
 std::vector<std::string> Shell::tokenize(const std::string& input) {
@@ -42,12 +43,38 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
             in_double_quote = !in_double_quote;
             continue;
         }
+
+
         if (!in_single_quote && !in_double_quote && c == '>') {
+            bool append = (i + 1 < input.size() && input[i+1] == '>'); 
+            if(!curr.empty() && std::all_of(curr.begin(), curr.end(), [](unsigned char ch){ return std::isdigit(ch); })) {
+                if(append) {
+                    tokens.push_back(curr + ">>"); 
+                    curr.clear(); 
+                    i++; 
+                } else {
+                    tokens.push_back(curr + ">"); 
+                    curr.clear(); 
+                }
+            } else {
+                if(!curr.empty()) {
+                    tokens.push_back(curr); 
+                    curr.clear(); 
+                } else {
+                    if(append) {
+                        tokens.push_back(">>"); 
+                        i++; 
+                    } else {
+                        tokens.push_back(">"); 
+                    }
+                }
+                continue; 
+            }
             if (!curr.empty()) {
                 tokens.push_back(curr);
                 curr.clear();
             }
-            if (!tokens.empty() && (tokens.back() == "1") || tokens.back() == "2") {
+            if (!tokens.empty() && (tokens.back() == "1" || tokens.back() == "2")) {
                 std::string fd = tokens.back(); 
                 tokens.pop_back(); 
                 tokens.push_back(fd + ">"); 
