@@ -71,46 +71,51 @@ std::pair<std::vector<std::string>, std::pair<std::string, std::string>>
 Shell::parseRedirection(const std::vector<std::string>& tokens) {
     std::string stdoutFile;
     std::string stderrFile;
-    int redirectIndex = -1;
 
-    for (size_t i = 0; i < tokens.size(); i++) {
-        if (tokens[i] == ">" || tokens[i] == "1>") {
-            if (i + 1 < tokens.size()) {
-                stdoutFile = tokens[i + 1];
-                redirectIndex = static_cast<int>(i);
-            } else {
-                std::cerr << "Syntax error near unexpected token `newline'\n";
-                return {{}, {"", ""}};
-            }
-            break;
-        }
-        if (tokens[i] == "2>") {
-            if (i + 1 < tokens.size()) {
-                stderrFile = tokens[i + 1];
-                redirectIndex = static_cast<int>(i);
-            } else {
-                std::cerr << "Syntax error near unexpected token `newline'\n";
-                return {{}, {"", ""}};
-            }
-            break;
-        }
-        if (tokens[i] == "1>>" || tokens[i] == ">>") {
-            stdoutFile.append(tokens[i+1]); 
-            redirectIndex = static_cast<int>(i); 
-        } else {
-            std::cerr << "Syntax error near unexpected token `newline` << we are hear>> \n"; 
-            return {{}, {"", ""}}; 
-        }
-    }
-
+    auto is_digits = [](const std::string &s) {
+        return !s.empty() && std::all_of(s.begin(), s.end(),
+                [](unsigned char ch) { return std::isdigit(ch); }); 
+    }; 
     std::vector<std::string> cleanTokens;
-    if (redirectIndex != -1) {
-        cleanTokens.insert(cleanTokens.end(), tokens.begin(), tokens.begin() + redirectIndex);
-    } else {
-        cleanTokens = tokens;
-    }
+    for (size_t i = 0; i < tokens.size(); i++) {
+        const std::string &t = tokens[i]; 
+        
+        // Handle case A: combined operator tokens
+        if(t == ">" || t == "1>" || t == ">>" || t == "1>>") {
+            if (i + 1 >= tokens.size()) {
+                std::cerr << "Syntax error near unexpected token `newline`\n"; 
+                return {{}, {"", ""}}; 
+            }
+            stdoutFile = tokens[i+1]; 
+            ++i; 
+            continue; 
+        }
 
-    return {cleanTokens, {stdoutFile, stderrFile}};
+        if (t == "2>" || t == "2>>") {
+            if (i + 1 >= tokens.size()) {
+                std::cerr << "Syntax error near unexpected token `newline`\n";
+                return {{}, {"", ""}}; 
+            }
+            stderrFile = tokens[i+1]; 
+            ++i; 
+            continue; 
+        }
+        // CASE B: the SPLIT form
+        if (is_digits(t) && i + 2 < tokens.size() && tokens[i+1] == ">" || tokens[i+1] == ">>") {
+            const std::string &op = tokens[i+1]; 
+            const std::string &fname = tokens[i+2]; 
+
+            if(t == "2") {
+                stderrFile = fname; 
+            } else {
+                stdoutFile = fname; 
+            }
+            i+=2; 
+            continue;
+        }
+        cleanTokens.push_back(t); 
+        return {cleanTokens, {stdoutFile, stderrFile}};
+    }
 }
 void Shell::setupRedirection(const std::string& redirectFile, const std::string& stderrFile) {
     if (!redirectFile.empty()) {
