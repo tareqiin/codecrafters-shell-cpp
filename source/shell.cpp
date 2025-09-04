@@ -17,54 +17,32 @@
 #include <cstdio>
 
 int Shell::redirectStdoutToFile(const std::string &redirectFile) {
-    if (redirectFile.empty()) return -1; 
-    ensureParentDir(redirectFile);
-
-    int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
-    if (fd < 0) {
-        perror("open"); 
-        return -1; 
-    }
-    int saved = dup(STDERR_FILENO); 
-    if(saved < 0) {
-        perror("dup"); 
-        close(fd); 
-        return -1; 
-    }
-
-    if(dup2(fd, STDERR_FILENO) < 0) {
-        perror("dup2"); 
-        close(fd); 
-        close(saved); 
-        return -1; 
-    }
-
-    close(fd); 
-    return saved; 
-}
-int Shell::redirectStdoutToFile(const std::string &redirectFile) {
     if (redirectFile.empty()) return -1;
     ensureParentDir(redirectFile);
 
     int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (fd < 0) {
-        perror("open");
-        return -1;
-    }
+    if (fd < 0) { perror("open"); return -1; }
 
     int saved = dup(STDOUT_FILENO);
-    if (saved < 0) {
-        perror("dup");
-        close(fd);
-        return -1;
-    }
+    if (saved < 0) { perror("dup"); close(fd); return -1; }
 
-    if (dup2(fd, STDOUT_FILENO) < 0) {
-        perror("dup2");
-        close(fd);
-        close(saved);
-        return -1;
-    }
+    if (dup2(fd, STDOUT_FILENO) < 0) { perror("dup2"); close(fd); close(saved); return -1; }
+
+    close(fd);
+    return saved;
+}
+
+int Shell::redirectStderrToFile(const std::string &redirectFile) {
+    if (redirectFile.empty()) return -1;
+    ensureParentDir(redirectFile);
+
+    int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) { perror("open"); return -1; }
+
+    int saved = dup(STDERR_FILENO);
+    if (saved < 0) { perror("dup"); close(fd); return -1; }
+
+    if (dup2(fd, STDERR_FILENO) < 0) { perror("dup2"); close(fd); close(saved); return -1; }
 
     close(fd);
     return saved;
@@ -326,29 +304,29 @@ void Shell::handleCommand(const std::string& input) {
 
     } else {
         // external command
-        auto [cleanTokens, redirectFile] = parseRedirection(tokens);
-        if (cleanTokens.empty()) return;
+    auto [cleanTokens, redirs] = parseRedirection(tokens);
+    std::string stdoutFile = redirs.first;
+    std::string stderrFile = redirs.second;
 
-        std::vector<char*> argv;
-        std::vector<std::string> argv_storage = cleanTokens;
-        for (auto &t : argv_storage) {
-            argv.push_back(const_cast<char*>(t.c_str()));
-        }
-        argv.push_back(nullptr);
+    if (cleanTokens.empty()) return;
 
-        pid_t pid = fork();
-        if (pid == 0) {
+    std::vector<char*> argv;
+    std::vector<std::string> argv_storage = cleanTokens;
+    for (auto &t : argv_storage) {
+        argv.push_back(const_cast<char*>(t.c_str()));
+    }
+    argv.push_back(nullptr);
+
+    pid_t pid = fork();
+    if (pid == 0) {
         setupRedirection(stdoutFile, stderrFile);
         execvp(argv[0], argv.data());
-            std::cerr << argv[0] << ": command not found\n";
-            std::cout.flush(); 
-            exit(127);
-            
+        std::cerr << argv[0] << ": command not found\n";
+        std::cout.flush();
+        exit(127);
         } else if (pid > 0) {
             waitpid(pid, nullptr, 0);
-        } else {
-            perror("fork");
-        }
-
-    }
+            } else {
+                perror("fork");
+            }
 }
