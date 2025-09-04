@@ -1,5 +1,5 @@
 #include "../headers/shell.hpp"
-
+#include <iostream> 
 
 void Shell::run() {
     std::string input;
