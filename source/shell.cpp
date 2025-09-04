@@ -330,3 +330,5 @@ void Shell::handleCommand(const std::string& input) {
                 perror("fork");
             }
 }
+
+}
