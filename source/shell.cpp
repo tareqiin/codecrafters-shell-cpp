@@ -16,7 +16,32 @@
 #include <sys/stat.h>
 #include <cstdio>
 
+int Shell::redirectStdoutToFile(const std::string &redirectFile) {
+    if (redirectFile.empty()) return -1; 
+    ensureParentDir(redirectFile);
 
+    int fd = open(redirectFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
+    if (fd < 0) {
+        perror("open"); 
+        return -1; 
+    }
+    int saved = dup(STDERR_FILENO); 
+    if(saved < 0) {
+        perror("dup"); 
+        close(fd); 
+        return -1; 
+    }
+
+    if(dup2(fd, STDERR_FILENO) < 0) {
+        perror("dup2"); 
+        close(fd); 
+        close(saved); 
+        return -1; 
+    }
+
+    close(fd); 
+    return saved; 
+}
 int Shell::redirectStdoutToFile(const std::string &redirectFile) {
     if (redirectFile.empty()) return -1;
     ensureParentDir(redirectFile);
@@ -98,7 +123,7 @@ Shell::parseRedirection(const std::vector<std::string>& tokens) {
 }
 
 
-void Shell::setupRedirection(const std::string& redirectFile) {
+void Shell::setupRedirection(const std::string& redirectFile, const std::string& stderrFile) {
     if (!redirectFile.empty()) {
         ensureParentDir(redirectFile);
 
@@ -112,8 +137,20 @@ void Shell::setupRedirection(const std::string& redirectFile) {
             close(fd);
             exit(1);
         }
-        
+
         close(fd);
+    }
+
+    if(!stderrFile.empty()) {
+        ensureParentDir(stderrFile); 
+        int fd = open(stderrFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644); 
+        if (fd < 0)  { perror("open"); exit(1); }
+        if (dup2(fd, STDERR_FILENO) < 0) {
+            perror("dup2"); 
+            close(fd); 
+            exit(1); 
+        }
+        close(fd); 
     }
 }
 
