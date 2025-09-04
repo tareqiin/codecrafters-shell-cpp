@@ -13,8 +13,7 @@
 #include <sys/stat.h>
 #include <cstdio>
 
-
-
+// Redirect stdout to a given filename (truncate).
 int Shell::redirectStdoutToFile(const std::string &redirectFile) {
     if (redirectFile.empty()) return -1;
     ensureParentDir(redirectFile);
@@ -30,6 +29,8 @@ int Shell::redirectStdoutToFile(const std::string &redirectFile) {
     close(fd);
     return saved;
 }
+
+// Redirect stdout using a Redirection descriptor (supports append).
 int Shell::redirectStdoutToFile(const Redirection& redir) {
     if (redir.file.empty()) return -1;
     ensureParentDir(redir.file);
@@ -51,9 +52,6 @@ int Shell::redirectStdoutToFile(const Redirection& redir) {
     close(fd);
     return saved;
 }
-
-
-
 
 void Shell::ensureParentDir(const std::string& path) {
     size_t pos = 0;
@@ -78,47 +76,55 @@ static bool is_all_digits(const std::string &s) {
     return !s.empty() && std::all_of(s.begin(), s.end(),
         [](unsigned char ch){ return std::isdigit(ch); });
 }
-std::pair<std::vector<std::string>, std::pair<std::string, std::string>>
-Shell::parseRedirection(const std::vector<std::string>& tokens) {
-   Redirs redirs;
-int redirectIndex = -1;
 
-for (size_t i = 0; i < tokens.size(); i++) {
-    if (tokens[i] == ">" || tokens[i] == "1>") {
-        if (i + 1 < tokens.size()) {
-            redirs.stdoutRedir.file = tokens[i + 1];
-            redirs.stdoutRedir.append = false;
-            redirectIndex = static_cast<int>(i);
-        } else {
-            std::cerr << "Syntax error near unexpected token `newline'\n";
-            return {{}, {}};
-        }
-        break;
-    }
-    if (tokens[i] == ">>" || tokens[i] == "1>>") {
-        if (i + 1 < tokens.size()) {
-            redirs.stdoutRedir.file = tokens[i + 1];
-            redirs.stdoutRedir.append = true;
-            redirectIndex = static_cast<int>(i);
-        } else {
-            std::cerr << "Syntax error near unexpected token `newline'\n";
-            return {{}, {}};
-        }
-        break;
-    }
-    if (tokens[i] == "2>" || tokens[i] == "2>>") {
-        if (i + 1 < tokens.size()) {
-            redirs.stderrRedir.file = tokens[i + 1];
-            redirs.stderrRedir.append = (tokens[i] == "2>>");
-            redirectIndex = static_cast<int>(i);
-        } else {
-            std::cerr << "Syntax error near unexpected token `newline'\n";
-            return {{}, {}};
-        }
-        break;
-    }
-}
+ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
+    ParseResult pr;
+    pr.tokens = tokens; 
 
+    for (size_t i = 0; i < pr.tokens.size();) {
+        const std::string &tok = pr.tokens[i];
+
+        bool handled = false;
+        if (tok == ">" || tok == "1>") {
+            if (i + 1 < pr.tokens.size()) {
+                pr.stdoutFile = pr.tokens[i + 1];
+                pr.stdoutAppend = false;
+                pr.tokens.erase(pr.tokens.begin() + i, pr.tokens.begin() + i + 2);
+                handled = true;
+            } else {
+                std::cerr << "Syntax error near unexpected token `newline'\n";
+                return ParseResult{}; 
+            }
+        } else if (tok == ">>" || tok == "1>>") {
+            if (i + 1 < pr.tokens.size()) {
+                pr.stdoutFile = pr.tokens[i + 1];
+                pr.stdoutAppend = true;
+                pr.tokens.erase(pr.tokens.begin() + i, pr.tokens.begin() + i + 2);
+                handled = true;
+            } else {
+                std::cerr << "Syntax error near unexpected token `newline'\n";
+                return ParseResult{};
+            }
+        } else if (tok == "2>" || tok == "2>>") {
+            if (i + 1 < pr.tokens.size()) {
+                pr.stderrFile = pr.tokens[i + 1];
+                pr.stderrAppend = (tok == "2>>");
+                pr.tokens.erase(pr.tokens.begin() + i, pr.tokens.begin() + i + 2);
+                handled = true;
+            } else {
+                std::cerr << "Syntax error near unexpected token `newline'\n";
+                return ParseResult{};
+            }
+        } else if (tok.size() > 1 && is_all_digits(tok.substr(0, tok.size()-1)) && (tok.back() == '>' || (tok.size() > 1 && tok.substr(tok.size()-2) == ">>"))) {
+
+        }
+
+        if (!handled) {
+            ++i;
+        }
+    }
+
+    return pr;
 }
 
 void Shell::setupRedirection(const ParseResult &pr) {
@@ -151,4 +157,3 @@ void Shell::restoreStdout(int savedFd) {
         close(savedFd);
     }
 }
-
