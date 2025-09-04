@@ -79,7 +79,7 @@ static bool is_all_digits(const std::string &s) {
         [](unsigned char ch){ return std::isdigit(ch); });
 }
 std::pair<std::vector<std::string>, std::pair<std::string, std::string>>
-ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
+Shell::parseRedirection(const std::vector<std::string>& tokens) {
    Redirs redirs;
 int redirectIndex = -1;
 

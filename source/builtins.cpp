@@ -24,9 +24,6 @@ void Shell::builtinEcho(const std::vector<std::string>& tokens) {
 
     if (cleanTokens.empty()) return;
 
-    int savedStdout = redirectStdoutToFile(redirs.stdoutRedir);
-    int savedStderr = redirectStderrToFile(redirs.stderrRedir);
-
     for (size_t i = 1; i < cleanTokens.size(); ++i) {
         if (i > 1) std::cout << " ";
         std::cout << cleanTokens[i];
