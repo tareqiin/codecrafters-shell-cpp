@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <limits.h>
 
-// ---- builtin: exit ----
 void Shell::builtinExit(const std::vector<std::string>& tokens) {
     int code = 0;
     if (tokens.size() > 1) {
@@ -16,33 +15,40 @@ void Shell::builtinExit(const std::vector<std::string>& tokens) {
     exit(code);
 }
 
-// ---- builtin: echo ----
 void Shell::builtinEcho(const std::vector<std::string>& tokens) {
-    auto [cleanTokens, redirs] = parseRedirection(tokens);
-    int savedStdout = redirectStdoutToFile(redirs.stdoutFile);
-    int savedStderr = redirectStderrToFile(redirs.stderrFile);
+    ParseResult pr = parseRedirection(tokens);
+    int savedStdout = redirectStdoutToFile(pr.stdoutFile);
+    int savedStderr = redirectStderrToFile(pr.stderrFile);
 
-    if (cleanTokens.empty()) return;
+    if (pr.tokens.empty()) {
+        if (savedStdout >= 0) {
+            if (dup2(savedStdout, STDOUT_FILENO) < 0) perror("dup2 restore");
+            close(savedStdout);
+        }
+        if (savedStderr >= 0) {
+            if (dup2(savedStderr, STDERR_FILENO) < 0) perror("dup2 restore");
+            close(savedStderr);
+        }
+        return;
+    }
 
-    for (size_t i = 1; i < cleanTokens.size(); ++i) {
+    for (size_t i = 1; i < pr.tokens.size(); ++i) {
         if (i > 1) std::cout << " ";
-        std::cout << cleanTokens[i];
+        std::cout << pr.tokens[i];
     }
     std::cout << "\n";
     std::cout.flush();
 
     if (savedStdout >= 0) {
-        dup2(savedStdout, STDOUT_FILENO);
+        if (dup2(savedStdout, STDOUT_FILENO) < 0) perror("dup2 restore");
         close(savedStdout);
     }
     if (savedStderr >= 0) {
-        dup2(savedStderr, STDERR_FILENO);
+        if (dup2(savedStderr, STDERR_FILENO) < 0) perror("dup2 restore");
         close(savedStderr);
     }
 }
 
-
-// ---- builtin: type ----
 void Shell::builtinType(const std::vector<std::string>& tokens) {
     static const std::vector<std::string> builtins = {"echo", "exit", "type", "pwd", "cd"};
     if (tokens.size() < 2) return;
@@ -68,7 +74,6 @@ void Shell::builtinType(const std::vector<std::string>& tokens) {
     if (!found) std::cout << s << ": not found\n";
 }
 
-// ---- builtin: pwd ----
 void Shell::builtinPwd(const std::vector<std::string>& tokens) {
     char cwd[PATH_MAX];
     if (getcwd(cwd, sizeof(cwd)) != nullptr) {
@@ -78,7 +83,6 @@ void Shell::builtinPwd(const std::vector<std::string>& tokens) {
     }
 }
 
-// ---- builtin: cd ----
 void Shell::builtinCd(const std::vector<std::string>& tokens) {
     if (tokens.size() < 2) {
         char* home = getenv("HOME");
