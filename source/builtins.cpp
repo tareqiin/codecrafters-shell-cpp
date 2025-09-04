@@ -19,9 +19,13 @@ void Shell::builtinExit(const std::vector<std::string>& tokens) {
 // ---- builtin: echo ----
 void Shell::builtinEcho(const std::vector<std::string>& tokens) {
     auto [cleanTokens, redirectFile] = parseRedirection(tokens);
+    const std::string& stdoutFile = redirs.first; 
+    const std::string& stderrFile = redirs.second; 
+
     if (cleanTokens.empty()) return;
 
-    int savedStdout = redirectStdoutToFile(redirectFile);
+    int savedStdout = redirectStdoutToFile(stdoutFile);
+    int savedStderr = redirectStderrToFile(stderrFile); 
 
     for (size_t i = 1; i < cleanTokens.size(); ++i) {
         if (i > 1) std::cout << " ";
