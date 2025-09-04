@@ -17,9 +17,12 @@ struct Redirection {
 };
 
 struct Redirs {
-    Redirection stdoutRedir;
-    Redirection stderrRedir;
+    std::string stdoutRedir;
+    std::string stderrRedir;
 };
+
+using ParseResult = std::pair<std::vector<std::string>, Redirs>;
+
 
 
 class Shell {
