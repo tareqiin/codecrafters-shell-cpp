@@ -2,7 +2,7 @@
 #include <vector> 
 #include <string> 
 #include <cctype>
-
+#include <iostream> 
 
 std::vector<std::string> Shell::tokenize(const std::string& input) {
     std::vector<std::string> tokens;
