@@ -31,24 +31,15 @@ int Shell::redirectStdoutToFile(const std::string &redirectFile) {
 }
 
 // Redirect stdout using a Redirection descriptor (supports append).
-int Shell::redirectStdoutToFile(const Redirection& redir) {
-    if (redir.file.empty()) return -1;
-    ensureParentDir(redir.file);
 
-    int flags = O_WRONLY | O_CREAT | (redir.append ? O_APPEND : O_TRUNC);
-    int fd = open(redir.file.c_str(), flags, 0644);
-    if (fd < 0) { perror("open"); return -1; }
-
-    int saved = dup(STDOUT_FILENO);
-    if (saved < 0) { perror("dup"); close(fd); return -1; }
-
-    if (dup2(fd, STDOUT_FILENO) < 0) {
-        perror("dup2");
-        close(fd);
-        close(saved);
-        return -1;
-    }
-
+int Shell::redirectStderrToFile(const std::string &file) {
+    if (file.empty()) return -1;
+    ensureParentDir(file);
+    int fd = open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) { perror("open stderr"); return -1; }
+    int saved = dup(STDERR_FILENO);
+    if (saved < 0) { perror("dup stderr"); close(fd); return -1; }
+    if (dup2(fd, STDERR_FILENO) < 0) { perror("dup2 stderr"); close(fd); close(saved); return -1; }
     close(fd);
     return saved;
 }
@@ -127,22 +118,20 @@ ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
     return pr;
 }
 
-void Shell::setupRedirection(const ParseResult &pr) {
-    // stdout
-    if (!pr.stdoutFile.empty()) {
-        ensureParentDir(pr.stdoutFile);
-        int flags = O_WRONLY | O_CREAT | (pr.stdoutAppend ? O_APPEND : O_TRUNC);
-        int fd = open(pr.stdoutFile.c_str(), flags, 0644);
+void Shell::setupRedirection(const std::string& stdoutFile, const std::string& stderrFile) {
+    if (!stdoutFile.empty()) {
+        ensureParentDir(stdoutFile);
+        int flags = O_WRONLY | O_CREAT | O_TRUNC;
+        int fd = open(stdoutFile.c_str(), flags, 0644);
         if (fd < 0) { perror("open stdout redirect"); exit(1); }
         if (dup2(fd, STDOUT_FILENO) < 0) { perror("dup2 stdout"); close(fd); exit(1); }
         close(fd);
     }
 
-    // stderr
-    if (!pr.stderrFile.empty()) {
-        ensureParentDir(pr.stderrFile);
-        int flags = O_WRONLY | O_CREAT | (pr.stderrAppend ? O_APPEND : O_TRUNC);
-        int fd = open(pr.stderrFile.c_str(), flags, 0644);
+    if (!stderrFile.empty()) {
+        ensureParentDir(stderrFile);
+        int flags = O_WRONLY | O_CREAT | O_TRUNC;
+        int fd = open(stderrFile.c_str(), flags, 0644);
         if (fd < 0) { perror("open stderr redirect"); exit(1); }
         if (dup2(fd, STDERR_FILENO) < 0) { perror("dup2 stderr"); close(fd); exit(1); }
         close(fd);
