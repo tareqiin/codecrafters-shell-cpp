@@ -9,11 +9,7 @@ void Shell::executeExternal(const std::vector<std::string>& tokens) {
     if (tokens.empty()) return;
 
     ParseResult pr = parseRedirection(tokens);
-    const auto& cleanTokens = pr.cleanTokens;
-    const auto& redirs = pr.redirs;
-
-    int savedStdout = redirectStdoutToFile(redirs.stdoutFile);
-    int savedStderr = redirectStderrToFile(redirs.stderrFile);
+    const auto& cleanTokens = pr.tokens;
 
     if (cleanTokens.empty()) return;
 
@@ -26,7 +22,7 @@ void Shell::executeExternal(const std::vector<std::string>& tokens) {
 
     pid_t pid = fork();
     if (pid == 0) {
-        setupRedirection(redirs.stdoutFile, redirs.stderrFile);
+        setupRedirection(pr.stdoutFile, pr.stderrFile);
         execvp(argv[0], argv.data());
         std::cerr << argv[0] << ": command not found\n";
         exit(127);
