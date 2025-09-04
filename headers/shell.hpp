@@ -13,6 +13,5 @@ private:
     void setupRedirection(const std::string& redirectFile); 
     void ensureParentDir(const std::string& path); 
     int redirectStdoutToFile(const std::string &redirectFile); 
-    int redirectStdoutToFile(const std::string &redirectFile); 
-
+    int redirectStderrToFile(const std::string &redirectFile);  
 };

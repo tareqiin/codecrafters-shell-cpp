@@ -90,36 +90,43 @@ void Shell::ensureParentDir(const std::string& path) {
     }
 }
 
-std::pair<std::vector<std::string>, std::string>
+std::pair<std::vector<std::string>, std::pair<std::string, std::string>>
 Shell::parseRedirection(const std::vector<std::string>& tokens) {
-    std::string redirectFile;
+    std::string stdoutFile;
+    std::string stderrFile;
     int redirectIndex = -1;
 
     for (size_t i = 0; i < tokens.size(); i++) {
-        if (tokens[i] == ">" || tokens[i] == "1>" || tokens[i] == "2>") {
+        if (tokens[i] == ">" || tokens[i] == "1>") {
             if (i + 1 < tokens.size()) {
-                redirectFile = tokens[i + 1];
+                stdoutFile = tokens[i + 1];
                 redirectIndex = static_cast<int>(i);
             } else {
                 std::cerr << "Syntax error near unexpected token `newline'\n";
-                return {{}, ""};
+                return {{}, {"", ""}};
+            }
+            break;
+        }
+        if (tokens[i] == "2>") {
+            if (i + 1 < tokens.size()) {
+                stderrFile = tokens[i + 1];
+                redirectIndex = static_cast<int>(i);
+            } else {
+                std::cerr << "Syntax error near unexpected token `newline'\n";
+                return {{}, {"", ""}};
             }
             break;
         }
     }
+
     std::vector<std::string> cleanTokens;
     if (redirectIndex != -1) {
         cleanTokens.insert(cleanTokens.end(), tokens.begin(), tokens.begin() + redirectIndex);
-        if (!cleanTokens.empty()) {
-            std::string last = cleanTokens.back();
-            if (last == "1" || last == "2") {
-                cleanTokens.pop_back();
-            }
-        }
     } else {
         cleanTokens = tokens;
     }
-    return {cleanTokens, redirectFile};
+
+    return {cleanTokens, {stdoutFile, stderrFile}};
 }
 
 
@@ -244,10 +251,13 @@ void Shell::handleCommand(const std::string& input) {
         exit(code);
 
     } else if (cmd == "echo") {
-        auto [cleanTokens, redirectFile] = parseRedirection(tokens);
-        if (cleanTokens.empty()) return;
+        auto [cleanTokens, redirs] = parseRedirection(tokens);
+        std::string stdoutFile = redirs.first;
+        std::string stderrFile = redirs.second;
 
-        int savedStdout = redirectStdoutToFile(redirectFile);
+
+        int savedStdout = redirectStdoutToFile(stdoutFile);
+        int savedStderr = redirectStderrToFile(stderrFile);
 
         for (size_t i = 1; i < cleanTokens.size(); ++i) {
             if (i > 1) std::cout << " ";
@@ -256,12 +266,8 @@ void Shell::handleCommand(const std::string& input) {
         std::cout << "\n";
         std::cout.flush();
 
-        if (savedStdout >= 0) {
-            if (dup2(savedStdout, STDOUT_FILENO) < 0) {
-                perror("dup2 restore");
-            }
-            close(savedStdout);
-        }
+        if (savedStdout >= 0) { dup2(savedStdout, STDOUT_FILENO); close(savedStdout); }
+        if (savedStderr >= 0) { dup2(savedStderr, STDERR_FILENO); close(savedStderr); }
         return;
 
     } else if (cmd == "type") {
@@ -332,8 +338,8 @@ void Shell::handleCommand(const std::string& input) {
 
         pid_t pid = fork();
         if (pid == 0) {
-            setupRedirection(redirectFile);
-            execvp(argv[0], argv.data());
+        setupRedirection(stdoutFile, stderrFile);
+        execvp(argv[0], argv.data());
             std::cerr << argv[0] << ": command not found\n";
             std::cout.flush(); 
             exit(127);
