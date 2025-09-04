@@ -1,29 +1,18 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <utility>
 
-
-struct ParseResult {
-    std::vector<std::string> cleanTokens;
+struct Redirs {
     std::string stdoutFile;
     bool stdoutAppend = false;
     std::string stderrFile;
     bool stderrAppend = false;
 };
-struct Redirection {
-    std::string file;
-    bool append = false;
+
+struct ParseResult {
+    std::vector<std::string> cleanTokens;
+    Redirs redirs;
 };
-
-struct Redirs {
-    std::string stdoutRedir;
-    std::string stderrRedir;
-};
-
-using ParseResult = std::pair<std::vector<std::string>, Redirs>;
-
-
 
 class Shell {
 public:
@@ -33,16 +22,13 @@ public:
 private:
     std::vector<std::string> tokenize(const std::string& input);
 
-    std::pair<std::vector<std::string>, Redirs>
-    parseRedirection(const std::vector<std::string>& tokens);
+    ParseResult parseRedirection(const std::vector<std::string>& tokens);
 
     void setupRedirection(const std::string& stdoutFile, const std::string& stderrFile);
     void ensureParentDir(const std::string& path);
 
-    int redirectStdoutToFile(const Redirection& redir);
-    int redirectStderrToFile(const Redirection& redir);
-
-
+    int redirectStdoutToFile(const std::string& file);
+    int redirectStderrToFile(const std::string& file);
     void restoreStdout(int savedFd); 
 
     // builtins
