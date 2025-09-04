@@ -18,7 +18,7 @@ void Shell::builtinExit(const std::vector<std::string>& tokens) {
 
 // ---- builtin: echo ----
 void Shell::builtinEcho(const std::vector<std::string>& tokens) {
-    auto [cleanTokens, redirs] = parseRedirection(tokens);
+    auto [cleanTokens, redirs] = parseRedirection(tokens); // redirs is std::pair<std::string,std::string>
     const std::string& stdoutFile = redirs.first; 
     const std::string& stderrFile = redirs.second; 
 
@@ -40,7 +40,15 @@ void Shell::builtinEcho(const std::vector<std::string>& tokens) {
         }
         close(savedStdout);
     }
+
+    if (savedStderr >= 0) {
+        if (dup2(savedStderr, STDERR_FILENO) < 0) {
+            perror("dup2 restore stderr");
+        }
+        close(savedStderr);
+    }
 }
+
 
 // ---- builtin: type ----
 void Shell::builtinType(const std::vector<std::string>& tokens) {
