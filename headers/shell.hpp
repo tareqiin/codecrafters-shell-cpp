@@ -18,4 +18,14 @@ private:
 
     int redirectStdoutToFile(const std::string &redirectFile);
     int redirectStderrToFile(const std::string &redirectFile); // new
+
+    // builtins 
+
+    void builtinExit(const std::vector<std::string>& tokens);
+    void builtinEcho(const std::vector<std::string>& tokens);
+    void builtinType(const std::vector<std::string>& tokens);
+    void builtinPwd(const std::vector<std::string>& tokens);
+    void builtinCd(const std::vector<std::string>& tokens);
+    void executeExternal(const std::vector<std::string>& tokens);
+
 };
