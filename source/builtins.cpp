@@ -18,14 +18,12 @@ void Shell::builtinExit(const std::vector<std::string>& tokens) {
 
 // ---- builtin: echo ----
 void Shell::builtinEcho(const std::vector<std::string>& tokens) {
-    auto [cleanTokens, redirs] = parseRedirection(tokens); // redirs is std::pair<std::string,std::string>
-    const std::string& stdoutFile = redirs.first; 
-    const std::string& stderrFile = redirs.second; 
+    auto [cleanTokens, redirs] = parseRedirection(tokens);
 
     if (cleanTokens.empty()) return;
 
-    int savedStdout = redirectStdoutToFile(stdoutFile);
-    int savedStderr = redirectStderrToFile(stderrFile); 
+    int savedStdout = redirectStdoutToFile(redirs.stdoutRedir);
+    int savedStderr = redirectStderrToFile(redirs.stderrRedir);
 
     for (size_t i = 1; i < cleanTokens.size(); ++i) {
         if (i > 1) std::cout << " ";
@@ -35,16 +33,11 @@ void Shell::builtinEcho(const std::vector<std::string>& tokens) {
     std::cout.flush();
 
     if (savedStdout >= 0) {
-        if (dup2(savedStdout, STDOUT_FILENO) < 0) {
-            perror("dup2 restore");
-        }
+        dup2(savedStdout, STDOUT_FILENO);
         close(savedStdout);
     }
-
     if (savedStderr >= 0) {
-        if (dup2(savedStderr, STDERR_FILENO) < 0) {
-            perror("dup2 restore stderr");
-        }
+        dup2(savedStderr, STDERR_FILENO);
         close(savedStderr);
     }
 }
