@@ -117,29 +117,33 @@ ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
 
     return pr;
 }
-
 void Shell::setupRedirection(const std::string& stdoutFile, bool stdoutAppend,
-                             const std::string& stderrFile, bool stderrAppend) {
-    if (!stdoutFile.empty()) {
-        ensureParentDir(stdoutFile);
-        int flags = O_WRONLY | O_CREAT | (stdoutAppend ? O_APPEND : O_TRUNC);
-        int fd = open(stdoutFile.c_str(), flags, 0644);
-        if (fd < 0) { perror("open stdout redirect"); exit(1); }
-        if (dup2(fd, STDOUT_FILENO) < 0) { perror("dup2 stdout"); close(fd); exit(1); }
-        close(fd);
-    }
-
-    if (!stderrFile.empty()) {
-        ensureParentDir(stderrFile);
-        int flags = O_WRONLY | O_CREAT | (stderrAppend ? O_APPEND : O_TRUNC);
-        int fd = open(stderrFile.c_str(), flags, 0644);
-        if (fd < 0) { perror("open stderr redirect"); exit(1); }
-        if (dup2(fd, STDERR_FILENO) < 0) { perror("dup2 stderr"); close(fd); exit(1); }
-        close(fd);
-    }
+const std::string& stderrFile, bool stderrAppend) {
+if (!stdoutFile.empty()) {
+ensureParentDir(stdoutFile);
+int flags = O_WRONLY | O_CREAT | (stdoutAppend ? O_APPEND : O_TRUNC);
+int fd = open(stdoutFile.c_str(), flags, 0644);
+if (fd < 0) { perror("open stdout redirect"); exit(1); }
+if (dup2(fd, STDOUT_FILENO) < 0) { perror("dup2 stdout"); close(fd); exit(1); }
+close(fd);
 }
 
 
+if (!stderrFile.empty()) {
+ensureParentDir(stderrFile);
+int flags = O_WRONLY | O_CREAT | (stderrAppend ? O_APPEND : O_TRUNC);
+int fd = open(stderrFile.c_str(), flags, 0644);
+if (fd < 0) { perror("open stderr redirect"); exit(1); }
+if (dup2(fd, STDERR_FILENO) < 0) { perror("dup2 stderr"); close(fd); exit(1); }
+close(fd);
+}
+}
+
+
+// convenience wrapper
+void Shell::setupRedirection(const ParseResult& pr) {
+setupRedirection(pr.stdoutFile, pr.stdoutAppend, pr.stderrFile, pr.stderrAppend);
+}
 void Shell::restoreStdout(int savedFd) {
     if (savedFd >= 0) {
         if (dup2(savedFd, STDOUT_FILENO) < 0) {
