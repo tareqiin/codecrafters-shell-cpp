@@ -93,7 +93,6 @@ std::vector<std::string> Shell::tokenize(const std::string& input) {
         }
         curr.push_back(c);
     }
-
     if (!curr.empty()) tokens.push_back(curr);
     return tokens;
 }

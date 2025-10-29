@@ -118,10 +118,11 @@ ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
     return pr;
 }
 
-void Shell::setupRedirection(const std::string& stdoutFile, const std::string& stderrFile) {
+void Shell::setupRedirection(const std::string& stdoutFile, bool stdoutAppend,
+                             const std::string& stderrFile, bool stderrAppend) {
     if (!stdoutFile.empty()) {
         ensureParentDir(stdoutFile);
-        int flags = O_WRONLY | O_CREAT | O_TRUNC;
+        int flags = O_WRONLY | O_CREAT | (stdoutAppend ? O_APPEND : O_TRUNC);
         int fd = open(stdoutFile.c_str(), flags, 0644);
         if (fd < 0) { perror("open stdout redirect"); exit(1); }
         if (dup2(fd, STDOUT_FILENO) < 0) { perror("dup2 stdout"); close(fd); exit(1); }
@@ -130,13 +131,14 @@ void Shell::setupRedirection(const std::string& stdoutFile, const std::string& s
 
     if (!stderrFile.empty()) {
         ensureParentDir(stderrFile);
-        int flags = O_WRONLY | O_CREAT | O_TRUNC;
+        int flags = O_WRONLY | O_CREAT | (stderrAppend ? O_APPEND : O_TRUNC);
         int fd = open(stderrFile.c_str(), flags, 0644);
         if (fd < 0) { perror("open stderr redirect"); exit(1); }
         if (dup2(fd, STDERR_FILENO) < 0) { perror("dup2 stderr"); close(fd); exit(1); }
         close(fd);
     }
 }
+
 
 void Shell::restoreStdout(int savedFd) {
     if (savedFd >= 0) {
