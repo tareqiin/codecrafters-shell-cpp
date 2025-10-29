@@ -104,7 +104,6 @@ ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
                 return ParseResult{};
             }
         // append stdout
-        } 
         } else if (tok == ">>" || tok == "1>>") {
             if (i + 1 < pr.tokens.size()) {
                 pr.stdoutFile = pr.tokens[i + 1];
@@ -115,7 +114,6 @@ ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
                 std::cerr << "Syntax error near unexpected token `newline`\n";
                 return ParseResult{};
             }
-        }
         // stderr redirections (2> / 2>>)
         } else if (tok == "2>" || tok == "2>>") {
             if (i + 1 < pr.tokens.size()) {
