@@ -108,6 +108,16 @@ ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
             }
         } else if (tok.size() > 1 && is_all_digits(tok.substr(0, tok.size()-1)) && (tok.back() == '>' || (tok.size() > 1 && tok.substr(tok.size()-2) == ">>"))) {
 
+        } else if (tok == ">>" || tok == "1>>") {
+            if (i + 1 < pr.tokens.size()) {
+                pr.stderrFile = pr.tokens[i+1]; 
+                pr.stderrAppend = true; 
+                pr.tokens.erase(pr.tokens.begin() + i, pr.tokens.begin() + i + 2); 
+                handled = true; 
+            } else {
+                std::cerr << "Syntax error near unexpected token `newline`\n"; 
+                return ParseResult{}; 
+            }
         }
 
         if (!handled) {
