@@ -23,7 +23,8 @@ public:
 private:
     std::vector<std::string> tokenize(const std::string& input);
     ParseResult parseRedirection(const std::vector<std::string>& tokens);
-    void setupRedirection(const std::string& stdoutFile, const std::string& stderrFile);
+    void setupRedirection(const std::string& stdoutFile, bool stdoutAppend,
+                            const std::string& stderrFile, bool stderrAppend);
     void setupRedirection(const ParseResult& pr);
     void ensureParentDir(const std::string& path);
     int redirectStdoutToFile(const std::string& file);
