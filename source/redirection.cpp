@@ -83,52 +83,71 @@ static bool is_all_digits(const std::string &s) {
     return !s.empty() && std::all_of(s.begin(), s.end(),
         [](unsigned char ch){ return std::isdigit(ch); });
 }
-ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
-    ParseResult pr;
+ParseResult Shell::parseRedirection(const std::vector<std::string> &tokens)
+{
+    ParseResult result;
 
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        const std::string& token = tokens[i];
+    for (size_t i = 0; i < tokens.size(); ++i)
+    {
+        const std::string &token = tokens[i];
+        bool consumed = false;
 
-        // Append stdout: >> or 1>>
-        if (token == ">>" || token == "1>>") {
-            if (i + 1 < tokens.size()) {
-                pr.stdoutFile = tokens[i + 1];
-                pr.stdoutAppend = true;
-                i++; // skip filename
+        // Check if token includes a redirection pattern like "1>", "1>>", "2>", etc.
+        size_t pos = 0;
+        bool append = false;
+        FileDescriptor fd = FileDescriptor::STDOUT;
+
+        // Detect file descriptor (0, 1, or 2)
+        if (token.size() >= 2 && std::isdigit(token[0]) && token[1] == '>')
+        {
+            fd = static_cast<FileDescriptor>(token[0] - '0');
+            pos = 1;
+        }
+        else if (token[0] == '>')
+        {
+            fd = FileDescriptor::STDOUT;
+        }
+
+        // Detect if it's append (>>)
+        size_t arrow_len = 1;
+        if (pos < token.size() && token[pos] == '>')
+        {
+            if (pos + 1 < token.size() && token[pos + 1] == '>')
+            {
+                append = true;
+                arrow_len = 2;
             }
         }
-        // Overwrite stdout: > or 1>
-        else if (token == ">" || token == "1>") {
-            if (i + 1 < tokens.size()) {
-                pr.stdoutFile = tokens[i + 1];
-                pr.stdoutAppend = false;
-                i++;
+
+        // If the token itself contains a file (like 1>>out.txt)
+        if (pos + arrow_len < token.size())
+        {
+            std::string file = token.substr(pos + arrow_len);
+            result.redirections.push_back({fd, file, append});
+            consumed = true;
+        }
+        // Or if the file is in the next token (like 1>> out.txt)
+        else if (token == ">" || token == ">>" || token == "1>" || token == "1>>" || token == "2>" || token == "2>>")
+        {
+            if (i + 1 < tokens.size())
+            {
+                fd = (token[0] == '2') ? FileDescriptor::STDERR : FileDescriptor::STDOUT;
+                append = (token.find(">>") != std::string::npos);
+                result.redirections.push_back({fd, tokens[i + 1], append});
+                ++i;
+                consumed = true;
             }
         }
-        // Append stderr: 2>>
-        else if (token == "2>>") {
-            if (i + 1 < tokens.size()) {
-                pr.stderrFile = tokens[i + 1];
-                pr.stderrAppend = true;
-                i++;
-            }
-        }
-        // Overwrite stderr: 2>
-        else if (token == "2>") {
-            if (i + 1 < tokens.size()) {
-                pr.stderrFile = tokens[i + 1];
-                pr.stderrAppend = false;
-                i++;
-            }
-        }
-        // Otherwise, keep token as part of the command
-        else {
-            pr.tokens.push_back(token);
+
+        if (!consumed)
+        {
+            result.tokens.push_back(token);
         }
     }
 
-    return pr;
+    return result;
 }
+
 
 
 void Shell::setupRedirection(const std::string& stdoutFile, bool stdoutAppend,
