@@ -83,9 +83,9 @@ static bool is_all_digits(const std::string &s) {
     return !s.empty() && std::all_of(s.begin(), s.end(),
         [](unsigned char ch){ return std::isdigit(ch); });
 }
-
 ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
     ParseResult pr;
+
     for (size_t i = 0; i < tokens.size(); ++i) {
         const std::string& token = tokens[i];
 
@@ -105,17 +105,25 @@ ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
                 i++;
             }
         }
-        // stderr redirection (optional if implemented)
-        else if (token == "2>" || token == "2>>") {
+        // Append stderr: 2>>
+        else if (token == "2>>") {
             if (i + 1 < tokens.size()) {
                 pr.stderrFile = tokens[i + 1];
-                pr.stderrAppend = (token == "2>>");
+                pr.stderrAppend = true;
                 i++;
             }
         }
-        // Normal argument → keep it
+        // Overwrite stderr: 2>
+        else if (token == "2>") {
+            if (i + 1 < tokens.size()) {
+                pr.stderrFile = tokens[i + 1];
+                pr.stderrAppend = false;
+                i++;
+            }
+        }
+        // Otherwise, keep token as part of the command
         else {
-            pr.cmd.push_back(token);
+            pr.tokens.push_back(token);
         }
     }
 
