@@ -22,7 +22,8 @@ void Shell::executeExternal(const std::vector<std::string>& tokens) {
 
     pid_t pid = fork();
     if (pid == 0) {
-        setupRedirection(pr.stdoutFile, pr.stderrFile);
+        setupRedirection(pr);
+
         execvp(argv[0], argv.data());
         std::cerr << argv[0] << ": command not found\n";
         exit(127);
