@@ -104,17 +104,18 @@ ParseResult Shell::parseRedirection(const std::vector<std::string>& tokens) {
                 return ParseResult{};
             }
         // append stdout
+        } 
         } else if (tok == ">>" || tok == "1>>") {
             if (i + 1 < pr.tokens.size()) {
-                // FIXED: set stdoutFile (was mistakenly setting stderrFile before)
                 pr.stdoutFile = pr.tokens[i + 1];
                 pr.stdoutAppend = true;
                 pr.tokens.erase(pr.tokens.begin() + i, pr.tokens.begin() + i + 2);
                 handled = true;
             } else {
-                std::cerr << "Syntax error near unexpected token `newline'\n";
+                std::cerr << "Syntax error near unexpected token `newline`\n";
                 return ParseResult{};
             }
+        }
         // stderr redirections (2> / 2>>)
         } else if (tok == "2>" || tok == "2>>") {
             if (i + 1 < pr.tokens.size()) {
